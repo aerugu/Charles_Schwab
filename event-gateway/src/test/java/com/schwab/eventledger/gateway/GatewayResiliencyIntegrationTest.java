@@ -1,6 +1,7 @@
 package com.schwab.eventledger.gateway;
 
 import com.schwab.eventledger.common.EventType;
+import com.schwab.eventledger.common.EventResponse;
 import com.schwab.eventledger.common.TransactionEventRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ class GatewayResiliencyIntegrationTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
+    @Autowired
+    private EventRepository eventRepository;
+
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("account-service.base-url", () -> "http://localhost:1");
@@ -33,6 +37,8 @@ class GatewayResiliencyIntegrationTest {
 
     @Test
     void returnsServiceUnavailableWhenAccountServiceIsDownAndGatewayReadsStillWork() {
+        eventRepository.save(event("resilience-evt-existing", "acct-local-read"));
+
         var response1 = restTemplate.postForEntity("/events", event("resilience-evt-001"), String.class);
         var response2 = restTemplate.postForEntity("/events", event("resilience-evt-002"), String.class);
         var response3 = restTemplate.postForEntity("/events", event("resilience-evt-003"), String.class);
@@ -42,16 +48,35 @@ class GatewayResiliencyIntegrationTest {
         assertThat(response3.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
         assertThat(response3.getBody()).contains("circuit is open");
 
+        var balance = restTemplate.getForEntity("/accounts/acct-resilience/balance", String.class);
+        assertThat(balance.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(balance.getBody()).contains("Account Service Unavailable");
+
+        var singleEvent = restTemplate.getForEntity("/events/resilience-evt-existing", EventResponse.class);
+        assertThat(singleEvent.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(singleEvent.getBody()).isNotNull();
+        assertThat(singleEvent.getBody().eventId()).isEqualTo("resilience-evt-existing");
+
         var localRead = restTemplate.getForEntity("/events?account=acct-resilience", String.class);
 
         assertThat(localRead.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(localRead.getBody()).isEqualTo("[]");
+
+        var existingLocalRead = restTemplate.getForEntity("/events?account=acct-local-read", EventResponse[].class);
+
+        assertThat(existingLocalRead.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(existingLocalRead.getBody()).hasSize(1);
+        assertThat(existingLocalRead.getBody()[0].eventId()).isEqualTo("resilience-evt-existing");
     }
 
     private TransactionEventRequest event(String eventId) {
+        return event(eventId, "acct-resilience");
+    }
+
+    private TransactionEventRequest event(String eventId, String accountId) {
         return new TransactionEventRequest(
                 eventId,
-                "acct-resilience",
+                accountId,
                 EventType.CREDIT,
                 new BigDecimal("10.00"),
                 "USD",
