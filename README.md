@@ -7,24 +7,52 @@ Event Ledger is a two-service Spring Boot system for accepting financial transac
 ```mermaid
 flowchart LR
     client["Client / Upstream Systems"]
-    limiter["Gateway Rate Limiter<br/>token bucket / 429"]
-    gateway["Event Gateway API<br/>Public REST API :8080<br/>Validation, idempotency, tracing"]
-    gatewayDb[("Gateway H2 DB<br/>events + pending outbox")]
-    retry["Pending Event Retry Worker<br/>scheduled async fallback"]
-    account["Account Service<br/>Internal REST API :8081<br/>Balances and transaction history"]
-    accountDb[("Account H2 DB<br/>transactions")]
-    metrics["Metrics<br/>/metrics + /metrics/prometheus"]
 
-    client -->|"POST /events<br/>GET /events"| limiter
-    limiter --> gateway
+    subgraph edge["Public Boundary"]
+        limiter["Gateway Rate Limiter<br/>Token bucket / 429"]
+        gateway["Event Gateway API<br/>Public REST API :8080<br/>Validation, idempotency, tracing"]
+    end
+
+    subgraph gatewayStore["Gateway-Owned Persistence"]
+        gatewayDb[("Gateway H2 DB<br/>events + pending outbox")]
+        retry["Pending Event Retry Worker<br/>scheduled async fallback"]
+    end
+
+    subgraph internal["Internal Account Domain"]
+        account["Account Service<br/>Internal REST API :8081<br/>balances + transaction history"]
+        accountDb[("Account H2 DB<br/>transactions")]
+    end
+
+    metrics["Observability<br/>JSON logs, /metrics, /metrics/prometheus"]
+
+    client -->|"POST /events<br/>GET /events<br/>GET /accounts/{id}/balance"| limiter
+    limiter -->|"rate-limited traffic"| gateway
     gateway -->|"local reads/writes"| gatewayDb
-    gateway -->|"REST + X-Trace-Id<br/>timeout, exponential backoff + jitter, circuit breaker"| account
+    gateway -->|"REST + X-Trace-Id<br/>timeout, retry, jitter, circuit breaker"| account
     gateway -->|"queue when Account Service is down<br/>202 Accepted"| gatewayDb
     retry -->|"read due pending events"| gatewayDb
     retry -->|"replay transactions when recovered"| account
     account -->|"local reads/writes"| accountDb
-    client -->|"GET /accounts/{id}/balance"| gateway
-    gateway -.-> metrics
+    gateway -.->|"structured logs + custom metrics"| metrics
+    account -.->|"structured logs + health + metrics"| metrics
+
+    classDef client fill:#E0F2FE,stroke:#0284C7,color:#0F172A,stroke-width:2px;
+    classDef gateway fill:#DCFCE7,stroke:#16A34A,color:#052E16,stroke-width:2px;
+    classDef persistence fill:#FEF3C7,stroke:#D97706,color:#451A03,stroke-width:2px;
+    classDef worker fill:#FCE7F3,stroke:#DB2777,color:#500724,stroke-width:2px;
+    classDef service fill:#EDE9FE,stroke:#7C3AED,color:#2E1065,stroke-width:2px;
+    classDef observability fill:#F1F5F9,stroke:#475569,color:#0F172A,stroke-width:2px;
+
+    class client client;
+    class limiter,gateway gateway;
+    class gatewayDb,accountDb persistence;
+    class retry worker;
+    class account service;
+    class metrics observability;
+
+    style edge fill:#F8FAFC,stroke:#94A3B8,color:#334155,stroke-width:1px,stroke-dasharray: 5 5;
+    style gatewayStore fill:#FFFBEB,stroke:#F59E0B,color:#334155,stroke-width:1px,stroke-dasharray: 5 5;
+    style internal fill:#F5F3FF,stroke:#8B5CF6,color:#334155,stroke-width:1px,stroke-dasharray: 5 5;
 ```
 
 The Event Gateway is the public-facing entry point. It validates incoming transaction events, stores accepted events in its own H2 database, enforces `eventId` idempotency, lists events in `eventTimestamp` order, and propagates `X-Trace-Id` to downstream calls.
