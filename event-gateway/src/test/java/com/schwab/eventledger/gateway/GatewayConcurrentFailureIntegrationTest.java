@@ -25,7 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class GatewayConcurrentFailureTest {
+class GatewayConcurrentFailureIntegrationTest {
     private static HttpServer accountStub;
 
     @Autowired
@@ -33,25 +33,19 @@ class GatewayConcurrentFailureTest {
 
     @BeforeAll
     static void startAccountStub() throws IOException {
-        accountStub = HttpServer.create(new InetSocketAddress(0), 0);
-        accountStub.createContext("/accounts", GatewayConcurrentFailureTest::failSlowly);
-        accountStub.start();
+        ensureAccountStubStarted();
     }
 
     @AfterAll
     static void stopAccountStub() {
-        accountStub.stop(0);
+        if (accountStub != null) {
+            accountStub.stop(0);
+        }
     }
 
     @DynamicPropertySource
     static void accountProperties(DynamicPropertyRegistry registry) {
-        if (accountStub == null) {
-            try {
-                startAccountStub();
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-        }
+        ensureAccountStubStarted();
         registry.add("account-service.base-url", () -> "http://localhost:" + accountStub.getAddress().getPort());
         registry.add("account-service.timeout-ms", () -> "1000");
         registry.add("account-service.max-attempts", () -> "1");
@@ -98,5 +92,18 @@ class GatewayConcurrentFailureTest {
         }
         exchange.sendResponseHeaders(503, -1);
         exchange.close();
+    }
+
+    private static synchronized void ensureAccountStubStarted() {
+        if (accountStub != null) {
+            return;
+        }
+        try {
+            accountStub = HttpServer.create(new InetSocketAddress(0), 0);
+            accountStub.createContext("/accounts", GatewayConcurrentFailureIntegrationTest::failSlowly);
+            accountStub.start();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

@@ -94,23 +94,33 @@ Useful endpoints:
 - `GET /health`
 - `GET /metrics`
 
-## Tests
+## QA And Coverage
 
-Run all automated tests:
+Run unit tests only:
 
 ```bash
 mvn test
 ```
 
-Coverage includes:
+Run unit plus functional tests and generate both coverage report sets:
 
-- Gateway idempotency and duplicate response behavior
-- Chronological event listing for out-of-order arrivals
-- Validation failures for invalid payloads
-- Account balance computation and account-side idempotency
-- Trace ID propagation from Gateway to Account Service
-- Gateway resiliency when Account Service is down
-- Gateway local reads continuing while Account Service is unavailable
+```bash
+mvn clean verify
+```
+
+The build uses Surefire for unit tests and Failsafe for functional tests:
+
+- Unit tests cover account balance math, repository-level duplicate event protection, event submission locking, and circuit breaker behavior.
+- Functional tests cover Gateway and Account Service REST flows, idempotent duplicate submissions, out-of-order event listing, validation failures, trace propagation, concurrent duplicate failure handling, and graceful Gateway behavior when Account Service is unavailable.
+
+Coverage reports are generated as HTML:
+
+- `account-service/target/site/jacoco-unit/index.html`
+- `event-gateway/target/site/jacoco-unit/index.html`
+- `account-service/target/site/jacoco-functional/index.html`
+- `event-gateway/target/site/jacoco-functional/index.html`
+
+JaCoCo CSV files are emitted next to each HTML report for machine-readable coverage review.
 
 ## Resiliency Choice
 
