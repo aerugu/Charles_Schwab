@@ -180,6 +180,25 @@ The Gateway serializes submission processing per `eventId`, then claims that `ev
 
 The Gateway also applies a configurable token-bucket rate limiter at the edge. The default configuration allows short bursts while protecting the service from sustained request spikes; excess requests return `429 Too Many Requests`.
 
+## High-Volume And Low-Latency Readiness
+
+This implementation is intentionally scoped to the hiring exercise constraints, but the design choices were made with high-volume financial event ingestion in mind. The Gateway performs deterministic validation and idempotency checks before downstream calls, persists accepted events locally, isolates Account Service failures with timeout, retry, jitter, and circuit breaker behavior, and uses a pending outbox so transaction events are not lost when the internal service is unavailable. Reads for event history stay local to the Gateway, which keeps ledger lookups available even during Account Service degradation.
+
+For the exercise, both services use embedded H2 databases to keep the solution easy to run and review. In a production high-throughput environment, the same service boundaries would be retained while replacing the embedded stores with independently owned production databases, such as PostgreSQL or Aurora, with indexes and partitioning around `accountId`, `eventId`, and `eventTimestamp`. The Gateway idempotency table would be backed by a durable unique constraint and, if needed, accelerated with Redis for hot-key duplicate detection and distributed rate limiting.
+
+The current synchronous REST path is appropriate for the requested architecture and provides simple request-level traceability. For ultra-low-latency and very high-volume ingestion, the next evolution would introduce Kafka, Pulsar, or another durable streaming layer between event acceptance and account projection. In that model, `POST /events` would acknowledge after validation, idempotency claim, and durable enqueue; Account Service consumers would process events asynchronously by account partition, preserving per-account ordering while scaling horizontally. This would reduce client-facing latency and decouple ingestion throughput from account projection throughput.
+
+The implementation already includes several patterns that support this evolution:
+
+- Gateway-owned event ledger and Account-owned transaction state, avoiding shared database coupling.
+- Idempotent event and transaction handling, which is required for at-least-once delivery.
+- Out-of-order-safe balance calculation based on transaction sums instead of arrival order.
+- Local outbox and retry worker, which mirrors the production outbox/streaming pattern at exercise scale.
+- Trace propagation, structured logs, health checks, and metrics hooks for operational visibility.
+- Rate limiting and circuit breaking to protect the system under spikes or downstream failures.
+
+Before claiming production-grade high-volume, ultra-low-latency readiness, I would add load tests with explicit SLOs, production persistence, distributed idempotency/rate limiting, container orchestration autoscaling, real OpenTelemetry tracing with Jaeger or Zipkin, Prometheus/Grafana alerting, database migration tooling, and capacity testing for hot-account scenarios. The current implementation is therefore production-minded and architecturally prepared for scale, while deliberately keeping infrastructure lightweight for reviewability.
+
 ## Observability
 
 Both services emit JSON log lines with:
