@@ -4,31 +4,40 @@ Event Ledger is a two-service Spring Boot system for accepting financial transac
 
 ## Architecture
 
-```text
-Client
-  |
-  v
-Event Gateway API :8080
-  - validates and stores accepted events in its own H2 database
-  - enforces eventId idempotency
-  - lists account events by eventTimestamp
-  - propagates X-Trace-Id to the Account Service
-  |
-  | synchronous REST with timeout, retry, and circuit breaker
-  v
-Account Service :8081
-  - applies transactions idempotently in its own H2 database
-  - computes balance as CREDIT minus DEBIT
-  - exposes account details and recent transactions
+```mermaid
+flowchart LR
+    client["Client / Upstream Systems"]
+    gateway["Event Gateway API<br/>Public REST API :8080<br/>Validates, stores events, idempotency, tracing"]
+    gatewayDb[("Gateway H2 DB<br/>events")]
+    account["Account Service<br/>Internal REST API :8081<br/>Balances and transaction history"]
+    accountDb[("Account H2 DB<br/>transactions")]
+
+    client -->|"POST /events<br/>GET /events"| gateway
+    gateway -->|"local reads/writes"| gatewayDb
+    gateway -->|"REST + X-Trace-Id<br/>timeout, retry, circuit breaker"| account
+    account -->|"local reads/writes"| accountDb
+    client -->|"GET /accounts/{id}/balance"| gateway
 ```
+
+The Event Gateway is the public-facing entry point. It validates incoming transaction events, stores accepted events in its own H2 database, enforces `eventId` idempotency, lists events in `eventTimestamp` order, and propagates `X-Trace-Id` to downstream calls.
+
+The Account Service is an internal service called only by the Gateway. It stores applied transactions in its own H2 database, applies duplicate transactions idempotently, computes balance as `CREDIT - DEBIT`, and exposes account details to the Gateway.
 
 The services are independently runnable processes and do not share database state. In Docker Compose, only the Gateway publishes a host port; the Account Service remains internal to the Compose network.
 
-## Requirements
+## Setup Instructions
+
+Prerequisites:
 
 - Java 21+
 - Maven 3.9+
 - Docker and Docker Compose, optional but recommended
+
+Install dependencies and compile all modules:
+
+```bash
+mvn clean install -DskipTests
+```
 
 ## Run With Docker Compose
 
