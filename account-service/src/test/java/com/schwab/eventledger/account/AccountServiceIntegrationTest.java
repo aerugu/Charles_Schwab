@@ -12,7 +12,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 
+import javax.sql.DataSource;
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +24,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AccountServiceIntegrationTest {
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @Autowired
+    private DataSource dataSource;
+
+    @Test
+    void usesDedicatedAccountServiceDatabase() throws SQLException {
+        try (var connection = dataSource.getConnection()) {
+            assertThat(connection.getMetaData().getURL()).contains("accountdb");
+        }
+    }
 
     @Test
     void appliesTransactionsIdempotentlyAndComputesBalanceRegardlessOfOrder() {

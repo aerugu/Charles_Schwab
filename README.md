@@ -94,6 +94,8 @@ Useful endpoints:
 - `GET /health`
 - `GET /metrics`
 
+The explicit Gateway and Account Service HTTP contracts are documented in [API_CONTRACT.md](API_CONTRACT.md).
+
 ## QA And Coverage
 
 Run unit tests only:

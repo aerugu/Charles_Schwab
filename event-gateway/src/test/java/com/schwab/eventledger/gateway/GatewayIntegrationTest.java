@@ -21,10 +21,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -42,28 +44,37 @@ class GatewayIntegrationTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
+    @Autowired
+    private DataSource dataSource;
+
+    @Autowired
+    private AccountServiceProperties accountServiceProperties;
+
     @BeforeAll
     static void startAccountStub() throws IOException {
-        accountStub = HttpServer.create(new InetSocketAddress(0), 0);
-        accountStub.createContext("/accounts", GatewayIntegrationTest::handleAccountRequest);
-        accountStub.start();
+        ensureAccountStubStarted();
     }
 
     @AfterAll
     static void stopAccountStub() {
-        accountStub.stop(0);
+        if (accountStub != null) {
+            accountStub.stop(0);
+        }
     }
 
     @DynamicPropertySource
     static void accountProperties(DynamicPropertyRegistry registry) {
-        if (accountStub == null) {
-            try {
-                startAccountStub();
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-        }
+        ensureAccountStubStarted();
         registry.add("account-service.base-url", () -> "http://localhost:" + accountStub.getAddress().getPort());
+    }
+
+    @Test
+    void usesDedicatedGatewayDatabaseAndAccountServiceRestBoundary() throws SQLException {
+        try (var connection = dataSource.getConnection()) {
+            assertThat(connection.getMetaData().getURL()).contains("gatewaydb");
+        }
+        assertThat(accountServiceProperties.baseUrl())
+                .isEqualTo("http://localhost:" + accountStub.getAddress().getPort());
     }
 
     @Test
@@ -170,5 +181,18 @@ class GatewayIntegrationTest {
         }
         exchange.sendResponseHeaders(404, -1);
         exchange.close();
+    }
+
+    private static synchronized void ensureAccountStubStarted() {
+        if (accountStub != null) {
+            return;
+        }
+        try {
+            accountStub = HttpServer.create(new InetSocketAddress(0), 0);
+            accountStub.createContext("/accounts", GatewayIntegrationTest::handleAccountRequest);
+            accountStub.start();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }
