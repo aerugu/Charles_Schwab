@@ -18,6 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * JDBC repository for Gateway-owned event ledger data and the local pending
+ * outbox used for async Account Service application.
+ *
+ * <p>The repository is intentionally scoped to Gateway storage only. Account
+ * state is never read from or written to this database.</p>
+ */
 @Repository
 class EventRepository {
     private static final TypeReference<Map<String, Object>> METADATA_TYPE = new TypeReference<>() {
@@ -159,6 +166,19 @@ class EventRepository {
     }
 
     private EventRecord mapRow(ResultSet rs, int rowNum) throws SQLException {
+        return mapEventRecord(rs);
+    }
+
+    private PendingEventRecord mapPendingRow(ResultSet rs, int rowNum) throws SQLException {
+        return new PendingEventRecord(
+                mapEventRecord(rs),
+                rs.getInt("attempt_count"),
+                rs.getTimestamp("next_attempt_at").toInstant(),
+                rs.getString("last_error")
+        );
+    }
+
+    private EventRecord mapEventRecord(ResultSet rs) throws SQLException {
         return new EventRecord(
                 rs.getString("event_id"),
                 rs.getString("account_id"),
@@ -168,25 +188,6 @@ class EventRepository {
                 rs.getTimestamp("event_timestamp").toInstant(),
                 readMetadata(rs.getString("metadata_json")),
                 rs.getTimestamp("received_at").toInstant()
-        );
-    }
-
-    private PendingEventRecord mapPendingRow(ResultSet rs, int rowNum) throws SQLException {
-        var event = new EventRecord(
-                rs.getString("event_id"),
-                rs.getString("account_id"),
-                EventType.valueOf(rs.getString("type")),
-                rs.getBigDecimal("amount"),
-                rs.getString("currency"),
-                rs.getTimestamp("event_timestamp").toInstant(),
-                readMetadata(rs.getString("metadata_json")),
-                rs.getTimestamp("received_at").toInstant()
-        );
-        return new PendingEventRecord(
-                event,
-                rs.getInt("attempt_count"),
-                rs.getTimestamp("next_attempt_at").toInstant(),
-                rs.getString("last_error")
         );
     }
 

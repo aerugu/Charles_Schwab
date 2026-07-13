@@ -7,6 +7,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Coordinates event submission semantics for the Gateway.
+ *
+ * <p>The service is responsible for preserving idempotency before invoking the
+ * Account Service. When the downstream account dependency is unavailable, the
+ * event remains stored locally and is marked pending for asynchronous retry.</p>
+ */
 @Service
 class EventService {
     private final EventRepository repository;

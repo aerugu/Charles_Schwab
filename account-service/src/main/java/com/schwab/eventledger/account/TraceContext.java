@@ -1,5 +1,8 @@
 package com.schwab.eventledger.account;
 
+/**
+ * Request-scoped trace ID holder used by Account Service structured logging.
+ */
 final class TraceContext {
     private static final ThreadLocal<String> TRACE_ID = new ThreadLocal<>();
 

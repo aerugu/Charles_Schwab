@@ -7,6 +7,14 @@ import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Minimal circuit breaker for Account Service calls.
+ *
+ * <p>The breaker opens after a configurable number of consecutive failures and
+ * fails fast until the open window expires. It deliberately stays small for the
+ * exercise; production systems would usually use Resilience4j or an equivalent
+ * managed platform primitive.</p>
+ */
 @Component
 class SimpleCircuitBreaker {
     private enum State {

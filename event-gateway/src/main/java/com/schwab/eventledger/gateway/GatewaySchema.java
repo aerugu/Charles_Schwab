@@ -3,6 +3,13 @@ package com.schwab.eventledger.gateway;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+/**
+ * Initializes Gateway-owned embedded database tables.
+ *
+ * <p>Keeping schema creation local to the Gateway reinforces service ownership:
+ * event ledger rows and pending outbox rows are not shared with the Account
+ * Service database.</p>
+ */
 @Component
 class GatewaySchema {
     GatewaySchema(JdbcTemplate jdbcTemplate) {

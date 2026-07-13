@@ -7,8 +7,9 @@ import com.schwab.eventledger.common.HealthResponse;
 import com.schwab.eventledger.common.MetricsSnapshot;
 import com.schwab.eventledger.common.TransactionEventRequest;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,14 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Public REST API for the Event Gateway.
+ *
+ * <p>The controller intentionally keeps Account Service state behind the Gateway
+ * boundary. Event reads use only the Gateway database, while account reads are
+ * proxied through {@link AccountClient} so downstream failures are handled
+ * consistently.</p>
+ */
 @RestController
 class EventController {
     private final EventService eventService;
@@ -27,7 +36,8 @@ class EventController {
     private final AccountClient accountClient;
     private final ServiceMetrics metrics;
 
-    EventController(EventService eventService, EventRepository eventRepository, AccountClient accountClient, ServiceMetrics metrics) {
+    EventController(EventService eventService, EventRepository eventRepository,
+                    AccountClient accountClient, ServiceMetrics metrics) {
         this.eventService = eventService;
         this.eventRepository = eventRepository;
         this.accountClient = accountClient;
@@ -42,7 +52,7 @@ class EventController {
         }
         return result.pending()
                 ? ResponseEntity.accepted().body(result.response())
-                : ResponseEntity.status(201).body(result.response());
+                : ResponseEntity.status(HttpStatus.CREATED).body(result.response());
     }
 
     @GetMapping("/events/{eventId}")

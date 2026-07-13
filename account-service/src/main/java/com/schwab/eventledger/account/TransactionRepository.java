@@ -16,6 +16,13 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * JDBC repository for Account Service transaction state.
+ *
+ * <p>The {@code event_id} primary key is the Account Service's idempotency
+ * guard. Balance is derived from stored transactions, making it independent of
+ * event arrival order.</p>
+ */
 @Repository
 class TransactionRepository {
     private final JdbcTemplate jdbcTemplate;

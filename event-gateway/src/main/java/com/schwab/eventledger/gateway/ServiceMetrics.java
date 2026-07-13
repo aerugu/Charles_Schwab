@@ -8,6 +8,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
 
+/**
+ * In-memory request/error counters exposed through JSON and Prometheus text
+ * endpoints.
+ */
 @Component
 class ServiceMetrics {
     private final Map<String, LongAdder> requestCounts = new ConcurrentHashMap<>();

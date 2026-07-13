@@ -8,6 +8,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
 
+/**
+ * In-memory request/error counters exposed by the Account Service metrics API.
+ */
 @Component
 class ServiceMetrics {
     private final Map<String, LongAdder> requestCounts = new ConcurrentHashMap<>();

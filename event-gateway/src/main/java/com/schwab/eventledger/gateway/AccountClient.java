@@ -17,6 +17,15 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * REST client for the Gateway to Account Service boundary.
+ *
+ * <p>All calls propagate the current trace ID and are protected by timeout,
+ * bounded retry, exponential backoff with jitter, and a circuit breaker. The
+ * client converts transport failures into {@link AccountUnavailableException}
+ * so controllers and background workers can make consistent degradation
+ * decisions.</p>
+ */
 @Component
 class AccountClient {
     private final RestTemplate restTemplate;
@@ -52,23 +61,23 @@ class AccountClient {
     }
 
     BalanceResponse balance(String accountId) {
-        return executeWithResilience(() -> exchange(
+        return executeWithResilience(() -> requireBody(exchange(
                 "/accounts/{accountId}/balance",
                 HttpMethod.GET,
                 null,
                 BalanceResponse.class,
                 accountId
-        ).getBody(), "get_balance");
+        )), "get_balance");
     }
 
     AccountDetailsResponse account(String accountId) {
-        return executeWithResilience(() -> exchange(
+        return executeWithResilience(() -> requireBody(exchange(
                 "/accounts/{accountId}",
                 HttpMethod.GET,
                 null,
                 AccountDetailsResponse.class,
                 accountId
-        ).getBody(), "get_account");
+        )), "get_account");
     }
 
     boolean circuitOpen() {
@@ -87,7 +96,7 @@ class AccountClient {
                 T result = supplier.get();
                 circuitBreaker.recordSuccess();
                 return result;
-            } catch (RestClientException ex) {
+            } catch (RestClientException | AccountUnavailableException ex) {
                 lastFailure = ex;
                 logger.warn("account_service_call_failed", Map.of(
                         "operation", operation,
@@ -115,6 +124,14 @@ class AccountClient {
         var headers = new HttpHeaders();
         headers.set(TraceHeaders.TRACE_ID, TraceContext.get());
         return restTemplate.exchange(path, method, new HttpEntity<>(body, headers), responseType, uriVariables);
+    }
+
+    private <T> T requireBody(ResponseEntity<T> response) {
+        var body = response.getBody();
+        if (body == null) {
+            throw new AccountUnavailableException("Account Service returned an empty response body");
+        }
+        return body;
     }
 
     private void sleep(long millis) {

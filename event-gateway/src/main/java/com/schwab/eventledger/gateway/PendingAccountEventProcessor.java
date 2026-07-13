@@ -7,6 +7,14 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.Map;
 
+/**
+ * Scheduled processor for the Gateway pending outbox.
+ *
+ * <p>When synchronous application to the Account Service fails, the Gateway
+ * stores the event and records a pending outbox row. This processor periodically
+ * replays due rows and removes them only after Account Service accepts the
+ * idempotent transaction.</p>
+ */
 @Component
 class PendingAccountEventProcessor {
     private final EventRepository repository;

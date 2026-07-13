@@ -6,6 +6,7 @@ import com.schwab.eventledger.common.BalanceResponse;
 import com.schwab.eventledger.common.HealthResponse;
 import com.schwab.eventledger.common.MetricsSnapshot;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +17,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Instant;
 import java.util.Map;
 
+/**
+ * Internal REST API for account state.
+ *
+ * <p>The Account Service owns transaction application and balance computation.
+ * It is intentionally not exposed directly by Docker Compose; callers go
+ * through the Event Gateway.</p>
+ */
 @RestController
 class AccountController {
     private final TransactionRepository repository;
@@ -36,7 +44,7 @@ class AccountController {
                 "eventId", request.eventId(),
                 "created", created
         ));
-        return created ? ResponseEntity.status(201).build() : ResponseEntity.ok().build();
+        return created ? ResponseEntity.status(HttpStatus.CREATED).build() : ResponseEntity.ok().build();
     }
 
     @GetMapping("/accounts/{accountId}/balance")

@@ -3,6 +3,9 @@ package com.schwab.eventledger.account;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+/**
+ * Initializes Account Service-owned embedded database tables.
+ */
 @Component
 class AccountSchema {
     AccountSchema(JdbcTemplate jdbcTemplate) {

@@ -13,6 +13,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Establishes a trace ID for each Gateway request and records HTTP metrics.
+ */
 @Component
 class TraceAndMetricsFilter extends OncePerRequestFilter {
     private final ServiceMetrics metrics;

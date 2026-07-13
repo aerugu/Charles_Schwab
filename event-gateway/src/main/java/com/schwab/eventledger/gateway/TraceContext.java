@@ -1,5 +1,8 @@
 package com.schwab.eventledger.gateway;
 
+/**
+ * Request-scoped trace ID holder for log correlation and downstream REST calls.
+ */
 final class TraceContext {
     private static final ThreadLocal<String> TRACE_ID = new ThreadLocal<>();
 

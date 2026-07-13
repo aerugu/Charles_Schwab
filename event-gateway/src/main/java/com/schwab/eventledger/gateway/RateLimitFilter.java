@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -14,6 +15,13 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Gateway edge rate limiter implemented as an in-memory token bucket.
+ *
+ * <p>This protects the exercise service from sustained request bursts without
+ * introducing an external dependency. A production multi-instance deployment
+ * would typically move this concern to an API gateway or Redis-backed limiter.</p>
+ */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 class RateLimitFilter extends OncePerRequestFilter {
@@ -40,7 +48,7 @@ class RateLimitFilter extends OncePerRequestFilter {
             return;
         }
 
-        response.setStatus(429);
+        response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write("""
                 {"error":"Too Many Requests","messages":["Gateway rate limit exceeded; retry later"]}

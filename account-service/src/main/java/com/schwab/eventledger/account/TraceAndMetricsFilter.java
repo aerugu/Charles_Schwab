@@ -12,6 +12,9 @@ import org.springframework.web.servlet.HandlerMapping;
 import java.io.IOException;
 import java.util.Map;
 
+/**
+ * Reads the propagated trace ID and records Account Service HTTP metrics.
+ */
 @Component
 class TraceAndMetricsFilter extends OncePerRequestFilter {
     private final ServiceMetrics metrics;
