@@ -1,0 +1,75 @@
+name: AI-Augmented Event Ledger CI
+
+on:
+  push:
+    paths:
+      - "ai-augmented-event-ledger/**"
+      - ".github/workflows/ai-augmented-event-ledger-ci.yml"
+  pull_request:
+    paths:
+      - "ai-augmented-event-ledger/**"
+      - ".github/workflows/ai-augmented-event-ledger-ci.yml"
+
+jobs:
+  quality-gates:
+    name: Build, Test, Coverage, And Contract Validation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-augmented-event-ledger
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate API contract
+        run: ./scripts/validate-api-contract.sh
+
+      - name: Run backend unit tests
+        run: mvn test
+
+      - name: Run backend functional tests and coverage
+        run: mvn clean verify
+
+      - name: Build React operations console
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      - name: Validate Docker Compose configuration
+        run: docker compose config --quiet
+
+      - name: Generate coverage summary
+        run: ./scripts/generate-coverage-summary.sh | tee coverage-summary.md
+
+      - name: Upload backend coverage reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage-reports
+          path: |
+            ai-augmented-event-ledger/account-service/target/site/jacoco-unit
+            ai-augmented-event-ledger/account-service/target/site/jacoco-functional
+            ai-augmented-event-ledger/event-gateway/target/site/jacoco-unit
+            ai-augmented-event-ledger/event-gateway/target/site/jacoco-functional
+            ai-augmented-event-ledger/coverage-summary.md
+
+      - name: Upload frontend build
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: react-operations-console
+          path: ai-augmented-event-ledger/frontend/dist

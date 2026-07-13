@@ -4,15 +4,42 @@ AI-Augmented Event Ledger is a two-service Spring Boot system for accepting fina
 
 This folder is a separate application built from the stable Event Ledger baseline. The original working solution remains untouched at the repository root.
 
+## Reviewer Path
+
+Start here if you are evaluating the project:
+
+1. Read the SDLC traceability map: [AI_ASSISTED_SDLC.md](AI_ASSISTED_SDLC.md).
+2. Run the full local quality path:
+
+```bash
+./scripts/run-quality-gates.sh
+```
+
+3. Launch the complete application:
+
+```bash
+docker compose up --build
+```
+
+4. Open the React operations console at `http://localhost:3000`.
+5. Review the agent playbooks in [agents](agents), prompt templates in [prompts](prompts), ADRs in [docs/adr](docs/adr), and generated evidence in [docs/generated](docs/generated).
+
+For a step-by-step reviewer checklist, see [REVIEWER_PATH.md](REVIEWER_PATH.md).
+
 ## AI-Assisted SDLC Deliverables
 
 The submission includes explicit agent-style deliverables to show how AI-assisted engineering practices were applied throughout the SDLC:
 
-| Agent | Deliverable | Location |
+| Area | Deliverable | Location |
 |---|---|---|
 | Design Agent | Design document, architecture decisions, runtime/degraded-flow diagrams, production evolution notes | [docs/DESIGN_AGENT.md](docs/DESIGN_AGENT.md) |
 | Development Agent | Error handling, logging, resiliency, auditing, and commit strategy notes | [docs/DEVELOPMENT_AGENT.md](docs/DEVELOPMENT_AGENT.md) |
 | QA Agent | Unit/functional test strategy, coverage report locations, acceptance criteria | [docs/QA_AGENT.md](docs/QA_AGENT.md) |
+| Agent Playbooks | Repeatable Design, Development, QA, Review, and Release agent workflows | [agents](agents) |
+| Prompt Templates | Architecture, API contract, test generation, security/resiliency, and documentation prompts | [prompts](prompts) |
+| ADRs | Architecture decision records for service separation, idempotency, resiliency, and AI-assisted SDLC | [docs/adr](docs/adr) |
+| Automation | Quality gates, coverage summary, API contract validation, and demo-flow scripts | [scripts](scripts) |
+| CI | Backend build, React build, unit/functional tests, coverage artifacts, and Docker Compose validation | [.github/workflows/ai-augmented-event-ledger-ci.yml](../.github/workflows/ai-augmented-event-ledger-ci.yml) |
 
 ## Architecture
 
@@ -201,6 +228,18 @@ Run the complete automated test suite, including functional tests, real Gateway 
 mvn clean verify
 ```
 
+Run the full reviewer-oriented quality gate:
+
+```bash
+./scripts/run-quality-gates.sh
+```
+
+Additional automation:
+
+- `./scripts/validate-api-contract.sh` checks documented API contract references against controller mappings.
+- `./scripts/generate-coverage-summary.sh` emits a concise markdown summary from JaCoCo CSV reports.
+- `./scripts/demo-flow.sh` submits an event, reads ledger/audit data, checks balance, and verifies health endpoints against a running Gateway.
+
 The build uses Surefire for unit tests and Failsafe for functional tests:
 
 - Unit tests cover account balance math, repository-level duplicate event protection, event submission locking, circuit breaker behavior, the Gateway-to-Account consumer contract, and async fallback queue behavior.
@@ -227,7 +266,7 @@ The Gateway also applies a configurable token-bucket rate limiter at the edge. T
 
 ## High-Volume And Low-Latency Readiness
 
-This implementation is intentionally scoped to the hiring exercise constraints, but the design choices were made with high-volume financial event ingestion in mind. The Gateway performs deterministic validation and idempotency checks before downstream calls, persists accepted events locally, isolates Account Service failures with timeout, retry, jitter, and circuit breaker behavior, and uses a pending outbox so transaction events are not lost when the internal service is unavailable. Reads for event history stay local to the Gateway, which keeps ledger lookups available even during Account Service degradation.
+This implementation is intentionally scoped to the assignment constraints, but the design choices were made with high-volume financial event ingestion in mind. The Gateway performs deterministic validation and idempotency checks before downstream calls, persists accepted events locally, isolates Account Service failures with timeout, retry, jitter, and circuit breaker behavior, and uses a pending outbox so transaction events are not lost when the internal service is unavailable. Reads for event history stay local to the Gateway, which keeps ledger lookups available even during Account Service degradation.
 
 For the exercise, both services use embedded H2 databases to keep the solution easy to run and review. In a production high-throughput environment, the same service boundaries would be retained while replacing the embedded stores with independently owned production databases, such as PostgreSQL or Aurora, with indexes and partitioning around `accountId`, `eventId`, and `eventTimestamp`. The Gateway idempotency table would be backed by a durable unique constraint and, if needed, accelerated with Redis for hot-key duplicate detection and distributed rate limiting.
 
