@@ -1,6 +1,8 @@
 package com.schwab.eventledger.gateway;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.schwab.eventledger.common.ErrorResponse;
+import com.schwab.eventledger.common.EventType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -24,7 +26,7 @@ class ApiExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     ResponseEntity<ErrorResponse> unreadable(HttpMessageNotReadableException ex) {
-        return error(HttpStatus.BAD_REQUEST, "Malformed request", List.of("Request body contains invalid JSON or unsupported values"));
+        return error(HttpStatus.BAD_REQUEST, "Malformed request", List.of(readableMessage(ex)));
     }
 
     @ExceptionHandler(EventNotFoundException.class)
@@ -44,6 +46,22 @@ class ApiExceptionHandler {
 
     private String message(FieldError error) {
         return error.getField() + " " + error.getDefaultMessage();
+    }
+
+    private String readableMessage(HttpMessageNotReadableException ex) {
+        var cause = ex.getCause();
+        if (cause instanceof InvalidFormatException invalidFormat && invalidFormat.getTargetType().equals(EventType.class)) {
+            return "type must be CREDIT or DEBIT";
+        }
+        if (cause instanceof InvalidFormatException invalidFormat && invalidFormat.getPath().stream()
+                .anyMatch(reference -> "eventTimestamp".equals(reference.getFieldName()))) {
+            return "eventTimestamp must be a valid ISO-8601 timestamp";
+        }
+        if (cause instanceof InvalidFormatException invalidFormat && invalidFormat.getPath().stream()
+                .anyMatch(reference -> "amount".equals(reference.getFieldName()))) {
+            return "amount must be a number greater than 0";
+        }
+        return "Request body contains invalid JSON or unsupported values";
     }
 
     private ResponseEntity<ErrorResponse> error(HttpStatus status, String error, List<String> messages) {

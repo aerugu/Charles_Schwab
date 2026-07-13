@@ -92,7 +92,7 @@ class GatewayIntegrationTest {
 
     @Test
     void rejectsInvalidEventsWithMeaningfulBadRequest() {
-        var invalid = new TransactionEventRequest(
+        var zeroAmount = new TransactionEventRequest(
                 "gw-invalid",
                 "acct-invalid",
                 EventType.CREDIT,
@@ -102,10 +102,28 @@ class GatewayIntegrationTest {
                 Map.of()
         );
 
-        var response = restTemplate.postForEntity("/events", invalid, String.class);
+        var zeroAmountResponse = restTemplate.postForEntity("/events", zeroAmount, String.class);
+        var missingRequiredResponse = restTemplate.postForEntity("/events", Map.of(
+                "eventId", "gw-missing",
+                "amount", "15.00",
+                "currency", "USD",
+                "eventTimestamp", "2026-05-15T14:02:11Z"
+        ), String.class);
+        var unknownTypeResponse = restTemplate.postForEntity("/events", Map.of(
+                "eventId", "gw-unknown-type",
+                "accountId", "acct-invalid",
+                "type", "TRANSFER",
+                "amount", "15.00",
+                "currency", "USD",
+                "eventTimestamp", "2026-05-15T14:02:11Z"
+        ), String.class);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).contains("amount");
+        assertThat(zeroAmountResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(zeroAmountResponse.getBody()).contains("amount", "greater than 0");
+        assertThat(missingRequiredResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(missingRequiredResponse.getBody()).contains("accountId", "type");
+        assertThat(unknownTypeResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(unknownTypeResponse.getBody()).contains("type must be CREDIT or DEBIT");
     }
 
     @Test
