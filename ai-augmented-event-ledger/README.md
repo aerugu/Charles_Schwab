@@ -4,7 +4,7 @@ AI-Augmented Event Ledger is a two-service Spring Boot system for accepting fina
 
 This folder is a separate application built from the stable Event Ledger baseline. The original working solution remains untouched at the repository root.
 
-## Reviewer Path
+## Evaluation Path
 
 Start here if you are evaluating the project:
 
@@ -22,9 +22,9 @@ docker compose up --build
 ```
 
 4. Open the React operations console at `http://localhost:3000`.
-5. Review the agent playbooks in [agents](agents), prompt templates in [prompts](prompts), ADRs in [docs/adr](docs/adr), and generated evidence in [docs/generated](docs/generated).
+5. Inspect the agent playbooks in [agents](agents), prompt templates in [prompts](prompts), ADRs in [docs/adr](docs/adr), and generated evidence in [docs/generated](docs/generated).
 
-For a step-by-step reviewer checklist, see [REVIEWER_PATH.md](REVIEWER_PATH.md).
+For a step-by-step evaluation checklist, see [REVIEWER_PATH.md](REVIEWER_PATH.md).
 
 ## AI-Assisted SDLC Deliverables
 
@@ -228,7 +228,7 @@ Run the complete automated test suite, including functional tests, real Gateway 
 mvn clean verify
 ```
 
-Run the full reviewer-oriented quality gate:
+Run the full quality gate:
 
 ```bash
 ./scripts/run-quality-gates.sh

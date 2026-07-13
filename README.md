@@ -7,9 +7,9 @@ This repository contains two cleanly separated Event Ledger applications. They s
 | Event Ledger | Baseline distributed-systems implementation | [event-ledger](event-ledger) |
 | AI-Augmented Event Ledger | Extended implementation that demonstrates AI-assisted SDLC practices, auditing, and a React operations UI | [ai-augmented-event-ledger](ai-augmented-event-ledger) |
 
-## Reviewer Quick Start
+## Quick Start
 
-For the most complete review path, start with the AI-augmented implementation:
+For the most complete evaluation path, start with the AI-augmented implementation:
 
 ```bash
 cd ai-augmented-event-ledger
@@ -25,10 +25,10 @@ http://localhost:3000
 
 The AI-assisted SDLC evidence is intentionally easy to inspect:
 
-| Reviewer Question | Where To Look |
+| Question | Where To Look |
 |---|---|
 | How was AI-assisted engineering applied across the SDLC? | [ai-augmented-event-ledger/AI_ASSISTED_SDLC.md](ai-augmented-event-ledger/AI_ASSISTED_SDLC.md) |
-| What is the step-by-step reviewer path? | [ai-augmented-event-ledger/REVIEWER_PATH.md](ai-augmented-event-ledger/REVIEWER_PATH.md) |
+| What is the step-by-step evaluation path? | [ai-augmented-event-ledger/REVIEWER_PATH.md](ai-augmented-event-ledger/REVIEWER_PATH.md) |
 | What agent workflows were used? | [ai-augmented-event-ledger/agents](ai-augmented-event-ledger/agents) |
 | What reusable prompts support repeatability? | [ai-augmented-event-ledger/prompts](ai-augmented-event-ledger/prompts) |
 | What architecture decisions were made? | [ai-augmented-event-ledger/docs/adr](ai-augmented-event-ledger/docs/adr) |
@@ -62,7 +62,7 @@ The AI-augmented application is not a runtime LLM-agent system. It does not exec
 | Design, Development, QA, Review, and Release Agent playbooks | No | Yes |
 | Reusable AI prompt templates | No | Yes |
 | Architecture decision records | No | Yes |
-| Reviewer quality-gate scripts | No | Yes |
+| Quality-gate scripts | No | Yes |
 | GitHub Actions CI workflow | No | Yes |
 
 ## Event Ledger
@@ -79,11 +79,11 @@ docker compose up --build
 
 The AI-augmented solution keeps the same core distributed-system behavior and adds explicit SDLC evidence:
 
-- Design Agent playbook: architecture decisions, diagrams, risks, and reviewer-ready design outputs
+- Design Agent playbook: architecture decisions, diagrams, risks, and evaluation-ready design outputs
 - Development Agent playbook: implementation, logging, error handling, resiliency, auditing, and commit discipline
 - QA Agent playbook: unit tests, functional tests, coverage reports, and acceptance criteria
 - Review Agent playbook: repeatable architecture, API contract, resiliency, security, and documentation review
-- Release Agent playbook: reviewer handoff, quality evidence, CI expectations, and demo readiness
+- Release Agent playbook: release handoff, quality evidence, CI expectations, and demo readiness
 - Prompt templates: architecture review, API contract review, test generation, security/resiliency review, and documentation improvement
 - Automation scripts: quality gates, API contract validation, coverage summary, and demo flow
 - CI workflow: backend build, unit tests, functional tests, React build, coverage artifacts, and Docker Compose validation
