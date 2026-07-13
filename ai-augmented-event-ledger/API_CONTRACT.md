@@ -11,6 +11,8 @@ This project has two independently runnable Spring Boot services. They communica
 
 In Docker Compose, only the Gateway is published to the host. The Account Service is reachable to the Gateway at `http://account-service:8081` on the Compose network.
 
+The React operations console is published at `http://localhost:3000` in Docker Compose. It calls the Gateway through an nginx `/api` proxy, so the Account Service remains internal.
+
 ## Shared Contract Types
 
 The `common` module is intentionally limited to transport contracts:

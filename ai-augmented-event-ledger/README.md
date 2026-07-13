@@ -81,6 +81,7 @@ Prerequisites:
 
 - Java 21+
 - Maven 3.9+
+- Node.js 20+ and npm, only needed for local frontend development
 - Docker and Docker Compose, optional but recommended
 
 Install dependencies and compile all modules:
@@ -99,6 +100,12 @@ Gateway:
 
 ```bash
 curl http://localhost:8080/health
+```
+
+React UI:
+
+```bash
+open http://localhost:3000
 ```
 
 Account Service:
@@ -122,6 +129,16 @@ Start the Gateway in a second terminal:
 ```bash
 mvn -pl event-gateway -am spring-boot:run
 ```
+
+Start the React UI in a third terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The local React dev server runs at `http://localhost:5173` and proxies `/api` requests to the Gateway at `http://localhost:8080`.
 
 Submit an event:
 
@@ -156,6 +173,19 @@ Useful endpoints:
 - `GET /metrics/prometheus`
 
 The explicit Gateway and Account Service HTTP contracts are documented in [API_CONTRACT.md](API_CONTRACT.md).
+
+## React Operations Console
+
+The `frontend` module is a React/Vite operations console built on top of the existing Gateway APIs. It includes:
+
+- Event submission with metadata JSON and trace ID propagation
+- Chronological event listing by account
+- Event detail and audit trail lookup
+- Balance and account transaction lookup
+- Gateway health diagnostics
+- Request/error metrics visualization
+
+The UI uses `/api` as its default API base. Docker serves the compiled React app through nginx and proxies `/api` to the `event-gateway` service. Local Vite development uses the same `/api` path and proxies to `localhost:8080`.
 
 ## QA And Coverage
 

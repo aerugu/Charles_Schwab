@@ -16,3 +16,12 @@ services:
       ACCOUNT_SERVICE_BASE_URL: http://account-service:8081
     ports:
       - "8080:8080"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    depends_on:
+      - event-gateway
+    ports:
+      - "3000:80"
