@@ -8,6 +8,7 @@ import com.schwab.eventledger.common.MetricsSnapshot;
 import com.schwab.eventledger.common.TransactionEventRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,8 +37,11 @@ class EventController {
     @PostMapping("/events")
     ResponseEntity<EventResponse> submit(@Valid @RequestBody TransactionEventRequest request) {
         var result = eventService.submit(request);
-        return result.duplicate()
-                ? ResponseEntity.ok(result.response())
+        if (result.duplicate()) {
+            return ResponseEntity.ok(result.response());
+        }
+        return result.pending()
+                ? ResponseEntity.accepted().body(result.response())
                 : ResponseEntity.status(201).body(result.response());
     }
 
@@ -67,6 +71,7 @@ class EventController {
         return new HealthResponse("event-gateway", databaseUp ? "UP" : "DOWN", Instant.now(), Map.of(
                 "database", databaseUp ? "UP" : "DOWN",
                 "eventRows", databaseUp ? eventRepository.countRows() : "unavailable",
+                "pendingAccountEvents", databaseUp ? eventRepository.pendingCount() : "unavailable",
                 "accountServiceCircuitOpen", accountClient.circuitOpen()
         ));
     }
@@ -74,5 +79,10 @@ class EventController {
     @GetMapping("/metrics")
     MetricsSnapshot metrics() {
         return metrics.snapshot();
+    }
+
+    @GetMapping(value = "/metrics/prometheus", produces = MediaType.TEXT_PLAIN_VALUE)
+    String prometheusMetrics() {
+        return metrics.prometheus();
     }
 }

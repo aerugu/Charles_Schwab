@@ -19,5 +19,17 @@ class GatewaySchema {
                 )
                 """);
         jdbcTemplate.execute("create index if not exists idx_events_account_ts on events(account_id, event_timestamp, event_id)");
+        jdbcTemplate.execute("""
+                create table if not exists pending_account_events (
+                    event_id varchar(128) primary key,
+                    attempt_count integer not null,
+                    next_attempt_at timestamp with time zone not null,
+                    last_error varchar(512),
+                    created_at timestamp with time zone not null,
+                    updated_at timestamp with time zone not null,
+                    constraint fk_pending_event foreign key (event_id) references events(event_id) on delete cascade
+                )
+                """);
+        jdbcTemplate.execute("create index if not exists idx_pending_account_events_next_attempt on pending_account_events(next_attempt_at)");
     }
 }

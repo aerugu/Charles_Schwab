@@ -47,9 +47,9 @@ Request:
 Responses:
 
 - `201 Created` for a newly accepted event
+- `202 Accepted` when the event is stored locally and queued for retry because Account Service is unavailable
 - `200 OK` with `"duplicate": true` for a duplicate `eventId`
 - `400 Bad Request` for validation errors
-- `503 Service Unavailable` when the Account Service cannot apply the transaction
 
 ### `GET /events/{eventId}`
 
@@ -115,6 +115,7 @@ Gateway health diagnostics include:
 
 - `database`
 - `eventRows`
+- `pendingAccountEvents`
 - `accountServiceCircuitOpen`
 
 Account Service health diagnostics include:
@@ -122,7 +123,7 @@ Account Service health diagnostics include:
 - `database`
 - `transactionRows`
 
-Both services expose `GET /metrics`, returning request and error counts keyed by HTTP method plus endpoint template.
+Both services expose `GET /metrics`, returning request and error counts keyed by HTTP method plus endpoint template. The Gateway also exposes `GET /metrics/prometheus`, returning the same Gateway request and error counts in Prometheus text format.
 
 ## Cross-Service Headers
 

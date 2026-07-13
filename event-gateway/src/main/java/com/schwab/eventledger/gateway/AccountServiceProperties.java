@@ -17,6 +17,8 @@ record AccountServiceProperties(
         int maxAttempts,
         @Min(0)
         long backoffMs,
+        @Min(0)
+        long jitterMs,
         @Min(1)
         int circuitFailureThreshold,
         @Min(1)

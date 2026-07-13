@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class GatewayGracefulDegradationTest {
     private EventRepository eventRepository;
@@ -44,14 +43,15 @@ class GatewayGracefulDegradationTest {
     }
 
     @Test
-    void postEventsFailsGracefullyAndDoesNotLeavePartialGatewayStateWhenAccountServiceIsDown() {
+    void postEventsQueueLocallyWhenAccountServiceIsDown() {
         var request = event("graceful-post-001", "acct-graceful-down");
 
-        assertThatThrownBy(() -> eventService.submit(request))
-                .isInstanceOf(AccountUnavailableException.class)
-                .hasMessage("Account Service is unavailable for operation apply_transaction");
+        var result = eventService.submit(request);
 
-        assertThat(eventRepository.findById("graceful-post-001")).isEmpty();
+        assertThat(result.pending()).isTrue();
+        assertThat(result.duplicate()).isFalse();
+        assertThat(eventRepository.findById("graceful-post-001")).isPresent();
+        assertThat(eventRepository.pendingCount()).isEqualTo(1);
 
         var error = exceptionHandler.accountUnavailable(
                 new AccountUnavailableException("Account Service is unavailable for operation apply_transaction"));
@@ -100,9 +100,9 @@ class GatewayGracefulDegradationTest {
         private UnavailableAccountClient(ObjectMapper objectMapper) {
             super(
                     new RestTemplateBuilder(),
-                    new AccountServiceProperties("http://localhost:1", 100, 1, 0, 1, 5000),
+                    new AccountServiceProperties("http://localhost:1", 100, 1, 0, 0, 1, 5000),
                     new SimpleCircuitBreaker(
-                            new AccountServiceProperties("http://localhost:1", 100, 1, 0, 1, 5000),
+                            new AccountServiceProperties("http://localhost:1", 100, 1, 0, 0, 1, 5000),
                             Clock.systemUTC()
                     ),
                     new JsonLogger(objectMapper)

@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Component
 class AccountClient {
@@ -74,6 +75,10 @@ class AccountClient {
         return circuitBreaker.isOpen();
     }
 
+    RestTemplate restTemplate() {
+        return restTemplate;
+    }
+
     private <T> T executeWithResilience(CheckedSupplier<T> supplier, String operation) {
         circuitBreaker.beforeCall();
         RuntimeException lastFailure = null;
@@ -91,12 +96,19 @@ class AccountClient {
                         "error", ex.getClass().getSimpleName()
                 ));
                 if (attempt < properties.maxAttempts()) {
-                    sleep(properties.backoffMs() * attempt);
+                    sleep(backoffDelay(attempt));
                 }
             }
         }
         circuitBreaker.recordFailure();
         throw new AccountUnavailableException("Account Service is unavailable for operation " + operation, lastFailure);
+    }
+
+    private long backoffDelay(int attempt) {
+        var exponentialMultiplier = 1L << Math.min(attempt - 1, 10);
+        var baseDelay = properties.backoffMs() * exponentialMultiplier;
+        var jitter = properties.jitterMs() == 0 ? 0 : ThreadLocalRandom.current().nextLong(properties.jitterMs() + 1);
+        return baseDelay + jitter;
     }
 
     private <T> ResponseEntity<T> exchange(String path, HttpMethod method, Object body, Class<T> responseType, Object... uriVariables) {

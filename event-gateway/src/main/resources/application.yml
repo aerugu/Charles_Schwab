@@ -13,5 +13,15 @@ account-service:
   timeout-ms: 1000
   max-attempts: 2
   backoff-ms: 100
+  jitter-ms: 50
   circuit-failure-threshold: 3
   circuit-open-ms: 5000
+gateway:
+  rate-limit:
+    enabled: true
+    capacity: 100
+    refill-per-second: 50
+  pending-retry:
+    enabled: true
+    interval-ms: 5000
+    batch-size: 25

@@ -2,8 +2,10 @@ package com.schwab.eventledger.gateway;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
-@EnableConfigurationProperties(AccountServiceProperties.class)
+@EnableScheduling
+@EnableConfigurationProperties({AccountServiceProperties.class, RateLimitProperties.class, PendingEventRetryProperties.class})
 class GatewayConfiguration {
 }

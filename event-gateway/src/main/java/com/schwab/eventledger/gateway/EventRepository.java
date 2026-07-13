@@ -69,7 +69,62 @@ class EventRepository {
         jdbcTemplate.update("delete from events where event_id = ?", eventId);
     }
 
+    void markPending(String eventId, String error) {
+        var now = Instant.now();
+        try {
+            jdbcTemplate.update("""
+                    insert into pending_account_events(event_id, attempt_count, next_attempt_at, last_error, created_at, updated_at)
+                    values (?, ?, ?, ?, ?, ?)
+                    """,
+                    eventId,
+                    0,
+                    Timestamp.from(now),
+                    trim(error),
+                    Timestamp.from(now),
+                    Timestamp.from(now));
+        } catch (DuplicateKeyException duplicate) {
+            reschedulePending(eventId, 0, now, error);
+        }
+    }
+
+    void reschedulePending(String eventId, int attemptCount, Instant nextAttemptAt, String error) {
+        jdbcTemplate.update("""
+                update pending_account_events
+                set attempt_count = ?, next_attempt_at = ?, last_error = ?, updated_at = ?
+                where event_id = ?
+                """,
+                attemptCount,
+                Timestamp.from(nextAttemptAt),
+                trim(error),
+                Timestamp.from(Instant.now()),
+                eventId);
+    }
+
+    void deletePending(String eventId) {
+        jdbcTemplate.update("delete from pending_account_events where event_id = ?", eventId);
+    }
+
+    int pendingCount() {
+        Integer count = jdbcTemplate.queryForObject("select count(*) from pending_account_events", Integer.class);
+        return count == null ? 0 : count;
+    }
+
+    List<PendingEventRecord> findDuePending(Instant now, int limit) {
+        return jdbcTemplate.query("""
+                select e.event_id, e.account_id, e.type, e.amount, e.currency, e.event_timestamp, e.metadata_json,
+                       e.received_at, p.attempt_count, p.next_attempt_at, p.last_error
+                from pending_account_events p
+                join events e on e.event_id = p.event_id
+                where p.next_attempt_at <= ?
+                order by p.next_attempt_at asc, e.event_id asc
+                limit ?
+                """, this::mapPendingRow, Timestamp.from(now), limit);
+    }
+
     record SaveAttempt(EventRecord record, boolean created) {
+    }
+
+    record PendingEventRecord(EventRecord event, int attemptCount, Instant nextAttemptAt, String lastError) {
     }
 
     Optional<EventRecord> findById(String eventId) {
@@ -114,6 +169,32 @@ class EventRepository {
                 readMetadata(rs.getString("metadata_json")),
                 rs.getTimestamp("received_at").toInstant()
         );
+    }
+
+    private PendingEventRecord mapPendingRow(ResultSet rs, int rowNum) throws SQLException {
+        var event = new EventRecord(
+                rs.getString("event_id"),
+                rs.getString("account_id"),
+                EventType.valueOf(rs.getString("type")),
+                rs.getBigDecimal("amount"),
+                rs.getString("currency"),
+                rs.getTimestamp("event_timestamp").toInstant(),
+                readMetadata(rs.getString("metadata_json")),
+                rs.getTimestamp("received_at").toInstant()
+        );
+        return new PendingEventRecord(
+                event,
+                rs.getInt("attempt_count"),
+                rs.getTimestamp("next_attempt_at").toInstant(),
+                rs.getString("last_error")
+        );
+    }
+
+    private String trim(String error) {
+        if (error == null) {
+            return null;
+        }
+        return error.length() > 512 ? error.substring(0, 512) : error;
     }
 
     private String writeMetadata(Map<String, Object> metadata) {

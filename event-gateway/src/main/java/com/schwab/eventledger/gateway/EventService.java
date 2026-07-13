@@ -26,12 +26,12 @@ class EventService {
     private SubmissionResult submitLocked(TransactionEventRequest request) {
         var existing = repository.findById(request.eventId());
         if (existing.isPresent()) {
-            return new SubmissionResult(existing.get().toResponse(true), true);
+            return new SubmissionResult(existing.get().toResponse(true), true, false);
         }
 
         var saveAttempt = repository.saveOrFindExisting(request);
         if (!saveAttempt.created()) {
-            return new SubmissionResult(saveAttempt.record().toResponse(true), true);
+            return new SubmissionResult(saveAttempt.record().toResponse(true), true, false);
         }
 
         try {
@@ -42,10 +42,10 @@ class EventService {
                     request.currency(),
                     request.eventTimestamp()
             ));
-            return new SubmissionResult(saveAttempt.record().toResponse(false), false);
+            return new SubmissionResult(saveAttempt.record().toResponse(false), false, false);
         } catch (AccountUnavailableException ex) {
-            repository.deleteById(request.eventId());
-            throw ex;
+            repository.markPending(request.eventId(), ex.getMessage());
+            return new SubmissionResult(saveAttempt.record().toResponse(false), false, true);
         }
     }
 
@@ -61,6 +61,6 @@ class EventService {
                 .toList();
     }
 
-    record SubmissionResult(EventResponse response, boolean duplicate) {
+    record SubmissionResult(EventResponse response, boolean duplicate, boolean pending) {
     }
 }

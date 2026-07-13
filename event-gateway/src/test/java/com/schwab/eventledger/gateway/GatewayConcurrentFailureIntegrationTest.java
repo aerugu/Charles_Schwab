@@ -49,23 +49,28 @@ class GatewayConcurrentFailureIntegrationTest {
         registry.add("account-service.base-url", () -> "http://localhost:" + accountStub.getAddress().getPort());
         registry.add("account-service.timeout-ms", () -> "1000");
         registry.add("account-service.max-attempts", () -> "1");
+        registry.add("account-service.jitter-ms", () -> "0");
         registry.add("account-service.circuit-failure-threshold", () -> "10");
+        registry.add("gateway.rate-limit.enabled", () -> "false");
+        registry.add("gateway.pending-retry.enabled", () -> "false");
+        registry.add("gateway.pending-retry.interval-ms", () -> "5000");
+        registry.add("gateway.pending-retry.batch-size", () -> "25");
     }
 
     @Test
-    void concurrentDuplicateDoesNotReturnSuccessWhileOriginalApplyFails() {
+    void concurrentDuplicateQueuesOneEventWhileOriginalApplyFails() {
         var request = event("concurrent-fail-evt-001");
 
         var first = CompletableFuture.supplyAsync(() -> post(request));
         var second = CompletableFuture.supplyAsync(() -> post(request));
 
-        assertThat(first.join().getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-        assertThat(second.join().getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(first.join().getStatusCode()).isIn(HttpStatus.ACCEPTED, HttpStatus.OK);
+        assertThat(second.join().getStatusCode()).isIn(HttpStatus.ACCEPTED, HttpStatus.OK);
 
         var localRead = restTemplate.getForEntity("/events?account=acct-concurrent-fail", String.class);
 
         assertThat(localRead.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(localRead.getBody()).isEqualTo("[]");
+        assertThat(localRead.getBody()).contains("concurrent-fail-evt-001");
     }
 
     private ResponseEntity<String> post(TransactionEventRequest request) {

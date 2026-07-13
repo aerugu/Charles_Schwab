@@ -51,7 +51,7 @@ class SimpleCircuitBreakerTest {
     }
 
     private AccountServiceProperties properties(int threshold, long openMs) {
-        return new AccountServiceProperties("http://localhost:8081", 100, 1, 1, threshold, openMs);
+        return new AccountServiceProperties("http://localhost:8081", 100, 1, 1, 0, threshold, openMs);
     }
 
     private Clock fixedClock(String instant) {

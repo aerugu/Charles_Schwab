@@ -75,6 +75,11 @@ class GatewayIntegrationTest {
     static void accountProperties(DynamicPropertyRegistry registry) {
         ensureAccountStubStarted();
         registry.add("account-service.base-url", () -> "http://localhost:" + accountStub.getAddress().getPort());
+        registry.add("account-service.jitter-ms", () -> "0");
+        registry.add("gateway.rate-limit.enabled", () -> "false");
+        registry.add("gateway.pending-retry.enabled", () -> "false");
+        registry.add("gateway.pending-retry.interval-ms", () -> "5000");
+        registry.add("gateway.pending-retry.batch-size", () -> "25");
     }
 
     @Test

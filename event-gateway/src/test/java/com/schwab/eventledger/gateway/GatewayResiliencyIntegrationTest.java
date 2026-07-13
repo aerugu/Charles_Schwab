@@ -31,8 +31,13 @@ class GatewayResiliencyIntegrationTest {
         registry.add("account-service.timeout-ms", () -> "100");
         registry.add("account-service.max-attempts", () -> "2");
         registry.add("account-service.backoff-ms", () -> "10");
+        registry.add("account-service.jitter-ms", () -> "0");
         registry.add("account-service.circuit-failure-threshold", () -> "2");
         registry.add("account-service.circuit-open-ms", () -> "5000");
+        registry.add("gateway.rate-limit.enabled", () -> "false");
+        registry.add("gateway.pending-retry.enabled", () -> "false");
+        registry.add("gateway.pending-retry.interval-ms", () -> "5000");
+        registry.add("gateway.pending-retry.batch-size", () -> "25");
     }
 
     @Test
@@ -43,10 +48,9 @@ class GatewayResiliencyIntegrationTest {
         var response2 = restTemplate.postForEntity("/events", event("resilience-evt-002"), String.class);
         var response3 = restTemplate.postForEntity("/events", event("resilience-evt-003"), String.class);
 
-        assertThat(response1.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-        assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-        assertThat(response3.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-        assertThat(response3.getBody()).contains("circuit is open");
+        assertThat(response1.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+        assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+        assertThat(response3.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
 
         var balance = restTemplate.getForEntity("/accounts/acct-resilience/balance", String.class);
         assertThat(balance.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
@@ -60,7 +64,7 @@ class GatewayResiliencyIntegrationTest {
         var localRead = restTemplate.getForEntity("/events?account=acct-resilience", String.class);
 
         assertThat(localRead.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(localRead.getBody()).isEqualTo("[]");
+        assertThat(localRead.getBody()).contains("resilience-evt-001", "resilience-evt-002", "resilience-evt-003");
 
         var existingLocalRead = restTemplate.getForEntity("/events?account=acct-local-read", EventResponse[].class);
 

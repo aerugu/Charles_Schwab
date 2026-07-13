@@ -105,8 +105,13 @@ class GatewayAccountEndToEndIntegrationTest {
                         "--account-service.timeout-ms=1000",
                         "--account-service.max-attempts=2",
                         "--account-service.backoff-ms=10",
+                        "--account-service.jitter-ms=0",
                         "--account-service.circuit-failure-threshold=3",
-                        "--account-service.circuit-open-ms=5000"
+                        "--account-service.circuit-open-ms=5000",
+                        "--gateway.rate-limit.enabled=false",
+                        "--gateway.pending-retry.enabled=false",
+                        "--gateway.pending-retry.interval-ms=5000",
+                        "--gateway.pending-retry.batch-size=25"
                 );
     }
 
