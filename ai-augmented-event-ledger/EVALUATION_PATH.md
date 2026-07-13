@@ -1,9 +1,9 @@
-# Reviewer Path
+# Evaluation Path
 
 ## Start Here
 
 1. Read the root purpose in [README.md](README.md).
-2. Review the architecture diagram and service summary.
+2. Inspect the architecture diagram and service summary.
 3. Open the AI-assisted SDLC traceability map: [AI_ASSISTED_SDLC.md](AI_ASSISTED_SDLC.md).
 
 ## Run This Command
@@ -14,7 +14,7 @@ For the full backend verification path:
 ./scripts/run-quality-gates.sh
 ```
 
-For Docker-based runtime review:
+For Docker-based runtime evaluation:
 
 ```bash
 docker compose up --build
@@ -36,7 +36,7 @@ Use the React operations console to:
 - Query account balance and recent transactions.
 - Review health and metrics.
 
-## Review These Agent Deliverables
+## Inspect These Agent Deliverables
 
 - [Design Agent Playbook](agents/design-agent.md)
 - [Development Agent Playbook](agents/development-agent.md)
@@ -44,7 +44,7 @@ Use the React operations console to:
 - [Review Agent Playbook](agents/review-agent.md)
 - [Release Agent Playbook](agents/release-agent.md)
 
-## Review These Prompt Templates
+## Inspect These Prompt Templates
 
 - [Architecture Review Prompt](prompts/architecture-review-prompt.md)
 - [API Contract Review Prompt](prompts/api-contract-review-prompt.md)

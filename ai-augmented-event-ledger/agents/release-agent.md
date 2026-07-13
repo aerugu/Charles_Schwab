@@ -2,7 +2,7 @@
 
 ## Mission
 
-Prepare a repeatable release candidate by running quality gates, collecting evidence, and producing a reviewer-friendly handoff.
+Prepare a repeatable release candidate by running quality gates, collecting evidence, and producing an evaluation-ready handoff.
 
 ## Inputs
 
@@ -18,7 +18,7 @@ Prepare a repeatable release candidate by running quality gates, collecting evid
 2. Generate or refresh coverage summary.
 3. Validate API contract references.
 4. Validate Docker Compose configuration.
-5. Package release notes and reviewer path.
+5. Package release notes and the evaluation path.
 6. Confirm the repository is clean before final handoff.
 
 ## Prompts Used
@@ -28,7 +28,7 @@ Prepare a repeatable release candidate by running quality gates, collecting evid
 
 ## Outputs
 
-- [Reviewer Path](../REVIEWER_PATH.md)
+- [Evaluation Path](../EVALUATION_PATH.md)
 - [Quality Gate Report Example](../docs/generated/QUALITY_GATE_REPORT.md)
 - CI artifacts: coverage reports and frontend build output
 
@@ -42,4 +42,4 @@ Prepare a repeatable release candidate by running quality gates, collecting evid
 
 - Quality gates pass.
 - Release instructions are clear.
-- Reviewer can evaluate the system without guessing the intended path.
+- The system can be evaluated without guessing the intended path.

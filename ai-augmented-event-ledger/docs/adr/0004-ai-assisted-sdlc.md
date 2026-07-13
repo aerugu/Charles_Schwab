@@ -23,7 +23,7 @@ The runtime application does not call LLMs during transaction processing.
 
 ## Consequences
 
-- Reviewers can inspect the AI-assisted workflow directly.
+- The AI-assisted workflow can be inspected directly.
 - Engineering controls remain explicit: human review, tests, contract validation, and quality gates.
 - The application avoids overclaiming runtime AI behavior.
 - The approach is reusable for future feature work.

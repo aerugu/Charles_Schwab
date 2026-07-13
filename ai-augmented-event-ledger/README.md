@@ -24,7 +24,7 @@ docker compose up --build
 4. Open the React operations console at `http://localhost:3000`.
 5. Inspect the agent playbooks in [agents](agents), prompt templates in [prompts](prompts), ADRs in [docs/adr](docs/adr), and generated evidence in [docs/generated](docs/generated).
 
-For a step-by-step evaluation checklist, see [REVIEWER_PATH.md](REVIEWER_PATH.md).
+For a step-by-step evaluation checklist, see [EVALUATION_PATH.md](EVALUATION_PATH.md).
 
 ## AI-Assisted SDLC Deliverables
 
@@ -37,6 +37,11 @@ The submission includes explicit agent-style deliverables to show how AI-assiste
 | QA Agent | Unit/functional test strategy, coverage report locations, acceptance criteria | [docs/QA_AGENT.md](docs/QA_AGENT.md) |
 | Agent Playbooks | Repeatable Design, Development, QA, Review, and Release agent workflows | [agents](agents) |
 | Prompt Templates | Architecture, API contract, test generation, security/resiliency, and documentation prompts | [prompts](prompts) |
+| Agent Runs | Timestamped input prompts, agent outputs, human decisions, artifacts, and validation commands | [docs/agent-runs](docs/agent-runs) |
+| Traceability Matrix | Requirement-to-code, test, automation, and documentation mapping | [docs/REQUIREMENTS_TRACEABILITY_MATRIX.md](docs/REQUIREMENTS_TRACEABILITY_MATRIX.md) |
+| AI Engineering Scorecard | Productivity, quality, automation, human controls, risk reduction, and repeatability summary | [docs/AI_ENGINEERING_SCORECARD.md](docs/AI_ENGINEERING_SCORECARD.md) |
+| Demo Script | Five-minute walkthrough, technical deep dive, failure-mode demo, and SDLC evidence path | [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) |
+| Architecture Asset | Exported SVG architecture flow diagram | [docs/assets/architecture-flow.svg](docs/assets/architecture-flow.svg) |
 | ADRs | Architecture decision records for service separation, idempotency, resiliency, and AI-assisted SDLC | [docs/adr](docs/adr) |
 | Automation | Quality gates, coverage summary, API contract validation, and demo-flow scripts | [scripts](scripts) |
 | CI | Backend build, React build, unit/functional tests, coverage artifacts, and Docker Compose validation | [.github/workflows/ai-augmented-event-ledger-ci.yml](../.github/workflows/ai-augmented-event-ledger-ci.yml) |
@@ -232,6 +237,14 @@ Run the full quality gate:
 
 ```bash
 ./scripts/run-quality-gates.sh
+```
+
+Makefile shortcuts are also available:
+
+```bash
+make quality
+make test
+make demo
 ```
 
 Additional automation:

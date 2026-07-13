@@ -1,6 +1,6 @@
 # Quality Gate Report
 
-This report captures the reviewer-oriented quality gates encoded by `scripts/run-quality-gates.sh`.
+This report captures the quality gates encoded by `scripts/run-quality-gates.sh`.
 
 | Gate | Command | Local Result |
 |---|---|---|

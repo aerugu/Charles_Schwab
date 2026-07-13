@@ -14,7 +14,7 @@ The Design Agent was used to accelerate architecture discovery, identify distrib
 | Account-owned transaction state | Balance and account history remain internal account-domain concerns. |
 | Synchronous REST for service-to-service calls | Matches the assignment while keeping contracts simple and testable. |
 | Gateway local outbox for Account Service outages | Provides graceful degradation and a clear path to production outbox/streaming patterns. |
-| Trace ID propagation with JSON logs | Gives reviewers a visible request path across services without requiring heavy infrastructure. |
+| Trace ID propagation with JSON logs | Gives evaluators a visible request path across services without requiring heavy infrastructure. |
 | Audit trail at the Gateway boundary | Captures important event lifecycle decisions for support, compliance review, and debugging. |
 
 ## Runtime Flow

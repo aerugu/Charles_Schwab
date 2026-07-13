@@ -37,4 +37,4 @@ Meaningful commits are intended to reflect the AI-assisted SDLC stages:
 - Design Agent and QA Agent deliverables.
 - Verification updates after tests and coverage generation.
 
-This keeps the commit history useful for reviewers who want to see how the solution moved from architecture to implementation to validation.
+This keeps the commit history useful for understanding how the solution moved from architecture to implementation to validation.

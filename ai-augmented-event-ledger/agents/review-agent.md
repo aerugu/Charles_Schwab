@@ -2,7 +2,7 @@
 
 ## Mission
 
-Act as an AI-assisted principal engineer reviewer that checks correctness, architecture alignment, security posture, operational readiness, and documentation consistency.
+Act as an AI-assisted principal engineer review agent that checks correctness, architecture alignment, security posture, operational readiness, and documentation consistency.
 
 ## Inputs
 
@@ -36,7 +36,7 @@ Act as an AI-assisted principal engineer reviewer that checks correctness, archi
 
 ## Human Review Checkpoints
 
-- Human reviewer approves or rejects each finding.
+- A human engineer approves or rejects each finding.
 - Security-sensitive recommendations are validated manually.
 - No AI-generated code is merged without tests or explicit review.
 
@@ -44,4 +44,4 @@ Act as an AI-assisted principal engineer reviewer that checks correctness, archi
 
 - No critical correctness issues remain.
 - Residual risks are documented.
-- Reviewer path remains accurate.
+- Evaluation path remains accurate.

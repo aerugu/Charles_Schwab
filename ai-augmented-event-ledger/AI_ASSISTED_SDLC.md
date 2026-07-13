@@ -12,13 +12,15 @@ This document explains how AI-assisted engineering practices are represented in 
 | Development Agent | Guided implementation of error handling, structured logging, resiliency, audit trail, UI, and Docker integration | [agents/development-agent.md](agents/development-agent.md), [docs/DEVELOPMENT_AGENT.md](docs/DEVELOPMENT_AGENT.md) |
 | QA Agent | Converted requirements and risks into automated tests, coverage expectations, and quality gates | [agents/qa-agent.md](agents/qa-agent.md), [docs/QA_AGENT.md](docs/QA_AGENT.md), [scripts/run-quality-gates.sh](scripts/run-quality-gates.sh) |
 | Review Agent | Provides repeatable review criteria for architecture, security, resiliency, API contract, and documentation | [agents/review-agent.md](agents/review-agent.md), [prompts/security-resiliency-review-prompt.md](prompts/security-resiliency-review-prompt.md) |
-| Release Agent | Packages quality evidence and reviewer guidance into a repeatable handoff | [agents/release-agent.md](agents/release-agent.md), [REVIEWER_PATH.md](REVIEWER_PATH.md) |
+| Release Agent | Packages quality evidence and evaluation guidance into a repeatable handoff | [agents/release-agent.md](agents/release-agent.md), [EVALUATION_PATH.md](EVALUATION_PATH.md) |
 
 ## AI Tools And Techniques Represented
 
 - AI coding assistant for implementation planning, code generation support, and refactoring review.
 - Agent-style playbooks for repeatable design, development, QA, review, and release tasks.
 - Prompt templates for architecture review, API contract review, test generation, security/resiliency review, and documentation review.
+- Agent execution logs with input prompts, outputs, human decisions, artifacts, and validation commands.
+- Requirements traceability matrix mapping requirements to code, tests, automation, and documentation.
 - Automation scripts for quality gates, coverage summaries, API contract validation, and demo flow execution.
 - CI workflow for repeatable backend tests, frontend build, functional tests, Docker Compose validation, and coverage artifact publication.
 
@@ -39,7 +41,7 @@ AI-assisted output is treated as a productivity accelerator, not an authority. H
 | Design | Requirements were decomposed into service boundaries, architecture diagrams, and ADRs quickly. |
 | Development | Implementation tasks were scoped around clear patterns: repository ownership, controller contracts, audit entries, resiliency wrappers, and React UI screens. |
 | QA | Test scenarios were mapped directly to requirements and failure modes. |
-| Documentation | Reviewer-facing docs, agent playbooks, prompt templates, and runbooks were generated consistently. |
+| Documentation | Evaluation-ready docs, agent playbooks, prompt templates, traceability, and runbooks were generated consistently. |
 | Release | Scripts and CI encode repeatable quality checks instead of relying on manual memory. |
 
 ## Manual vs Automated Validation

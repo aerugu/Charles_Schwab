@@ -8,7 +8,7 @@ This file summarizes representative outputs from the AI-assisted SDLC workflow. 
 | Development Agent | Audit endpoint, React operations console, structured error handling notes | `docs/DEVELOPMENT_AGENT.md`, source code |
 | QA Agent | Requirement-to-test mapping and coverage report paths | `docs/QA_AGENT.md` |
 | Review Agent | Security/resiliency review prompt and checklist | `agents/review-agent.md`, `prompts/security-resiliency-review-prompt.md` |
-| Release Agent | Reviewer path and quality-gate commands | `agents/release-agent.md`, `REVIEWER_PATH.md` |
+| Release Agent | Evaluation path and quality-gate commands | `agents/release-agent.md`, `EVALUATION_PATH.md` |
 
 ## Human Decisions Captured
 
