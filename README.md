@@ -7,11 +7,40 @@ This repository contains two cleanly separated Event Ledger applications. They s
 | Event Ledger | Baseline distributed-systems implementation | [event-ledger](event-ledger) |
 | AI-Augmented Event Ledger | Extended implementation that demonstrates AI-assisted SDLC practices, auditing, and a React operations UI | [ai-augmented-event-ledger](ai-augmented-event-ledger) |
 
+## Reviewer Quick Start
+
+For the most complete review path, start with the AI-augmented implementation:
+
+```bash
+cd ai-augmented-event-ledger
+./scripts/run-quality-gates.sh
+docker compose up --build
+```
+
+Then open the React operations console:
+
+```text
+http://localhost:3000
+```
+
+The AI-assisted SDLC evidence is intentionally easy to inspect:
+
+| Reviewer Question | Where To Look |
+|---|---|
+| How was AI-assisted engineering applied across the SDLC? | [ai-augmented-event-ledger/AI_ASSISTED_SDLC.md](ai-augmented-event-ledger/AI_ASSISTED_SDLC.md) |
+| What is the step-by-step reviewer path? | [ai-augmented-event-ledger/REVIEWER_PATH.md](ai-augmented-event-ledger/REVIEWER_PATH.md) |
+| What agent workflows were used? | [ai-augmented-event-ledger/agents](ai-augmented-event-ledger/agents) |
+| What reusable prompts support repeatability? | [ai-augmented-event-ledger/prompts](ai-augmented-event-ledger/prompts) |
+| What architecture decisions were made? | [ai-augmented-event-ledger/docs/adr](ai-augmented-event-ledger/docs/adr) |
+| What automation validates quality? | [ai-augmented-event-ledger/scripts](ai-augmented-event-ledger/scripts) |
+| What generated evidence summarizes agent output and quality gates? | [ai-augmented-event-ledger/docs/generated](ai-augmented-event-ledger/docs/generated) |
+| What does CI validate? | [.github/workflows/ai-augmented-event-ledger-ci.yml](.github/workflows/ai-augmented-event-ledger-ci.yml) |
+
 ## Why Two Applications?
 
 The `event-ledger` application is the clean baseline implementation of the Event Gateway and Account Service architecture. It focuses on the required distributed-systems behavior: idempotency, out-of-order event handling, independent service databases, synchronous REST communication, resiliency, trace propagation, structured logging, metrics, Docker Compose, and automated tests.
 
-The `ai-augmented-event-ledger` application keeps that same deterministic backend architecture and adds visible SDLC evidence for how AI-assisted engineering practices can support delivery. It includes Design Agent, Development Agent, and QA Agent documentation, plus additional product capabilities such as a Gateway audit trail and a React-based operations console.
+The `ai-augmented-event-ledger` application keeps that same deterministic backend architecture and adds visible SDLC evidence for how AI-assisted engineering practices can support delivery. It includes Design, Development, QA, Review, and Release Agent playbooks; reusable prompt templates; architecture decision records; automation scripts; generated quality evidence; a GitHub Actions CI workflow; and additional product capabilities such as a Gateway audit trail and a React-based operations console.
 
 The AI-augmented application is not a runtime LLM-agent system. It does not execute autonomous AI agents inside the production application flow. Instead, it demonstrates an AI-augmented engineering workflow: agent-style roles are represented through structured design, development, and QA deliverables, while the application itself remains a deterministic Spring Boot microservices system.
 
@@ -30,7 +59,11 @@ The AI-augmented application is not a runtime LLM-agent system. It does not exec
 | Health and metrics endpoints | Yes | Yes |
 | Gateway audit trail endpoint | No | Yes |
 | React operations console | No | Yes |
-| Design, Development, and QA Agent SDLC docs | No | Yes |
+| Design, Development, QA, Review, and Release Agent playbooks | No | Yes |
+| Reusable AI prompt templates | No | Yes |
+| Architecture decision records | No | Yes |
+| Reviewer quality-gate scripts | No | Yes |
+| GitHub Actions CI workflow | No | Yes |
 
 ## Event Ledger
 
@@ -46,15 +79,20 @@ docker compose up --build
 
 The AI-augmented solution keeps the same core distributed-system behavior and adds explicit SDLC evidence:
 
-- Design Agent deliverable: architecture decisions and diagrams
-- Development Agent deliverable: implementation, logging, error handling, resiliency, and auditing notes
-- QA Agent deliverable: test strategy, coverage report locations, and acceptance criteria
+- Design Agent playbook: architecture decisions, diagrams, risks, and reviewer-ready design outputs
+- Development Agent playbook: implementation, logging, error handling, resiliency, auditing, and commit discipline
+- QA Agent playbook: unit tests, functional tests, coverage reports, and acceptance criteria
+- Review Agent playbook: repeatable architecture, API contract, resiliency, security, and documentation review
+- Release Agent playbook: reviewer handoff, quality evidence, CI expectations, and demo readiness
+- Prompt templates: architecture review, API contract review, test generation, security/resiliency review, and documentation improvement
+- Automation scripts: quality gates, API contract validation, coverage summary, and demo flow
+- CI workflow: backend build, unit tests, functional tests, React build, coverage artifacts, and Docker Compose validation
 - Gateway audit trail endpoint: `GET /events/{eventId}/audit`
 - React operations console
 
 ```bash
 cd ai-augmented-event-ledger
-mvn clean verify
+./scripts/run-quality-gates.sh
 docker compose up --build
 ```
 
