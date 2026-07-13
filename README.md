@@ -116,7 +116,7 @@ Coverage includes:
 
 The Gateway uses timeout + retry with linear backoff and a small circuit breaker around Account Service calls. Timeout and retry prevent slow or transient failures from hanging client requests. The circuit breaker opens after repeated failures so the Gateway can fail fast with `503 Service Unavailable` instead of repeatedly spending resources on an unhealthy dependency.
 
-The Gateway claims `eventId` in its local store before calling the Account Service. That makes the Gateway the source of truth for event identity and prevents concurrent duplicate submissions from racing into inconsistent Gateway and Account records. If the Account Service is unavailable, the Gateway removes that local claim and returns `503`, allowing the client to retry the same event later.
+The Gateway serializes submission processing per `eventId`, then claims that `eventId` in its local store before calling the Account Service. That makes the Gateway the source of truth for event identity and prevents concurrent duplicate submissions from racing into inconsistent Gateway and Account records. If the Account Service is unavailable, the Gateway removes that local claim and returns `503`, allowing the client to retry the same event later.
 
 `GET /events/{id}` and `GET /events?account=...` read only from the Gateway database, so they continue working during Account Service outages. Balance and account-detail queries return a clear `503` when the Account Service cannot be reached.
 

@@ -5,6 +5,7 @@ import com.schwab.eventledger.common.AccountTransactionRequest;
 import com.schwab.eventledger.common.BalanceResponse;
 import com.schwab.eventledger.common.HealthResponse;
 import com.schwab.eventledger.common.MetricsSnapshot;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,7 +29,7 @@ class AccountController {
     }
 
     @PostMapping("/accounts/{accountId}/transactions")
-    ResponseEntity<Void> applyTransaction(@PathVariable String accountId, @RequestBody AccountTransactionRequest request) {
+    ResponseEntity<Void> applyTransaction(@PathVariable String accountId, @Valid @RequestBody AccountTransactionRequest request) {
         boolean created = repository.apply(accountId, request);
         logger.info("transaction_apply_result", Map.of(
                 "accountId", accountId,

@@ -11,13 +11,19 @@ import java.util.List;
 class EventService {
     private final EventRepository repository;
     private final AccountClient accountClient;
+    private final EventSubmissionLocks submissionLocks;
 
-    EventService(EventRepository repository, AccountClient accountClient) {
+    EventService(EventRepository repository, AccountClient accountClient, EventSubmissionLocks submissionLocks) {
         this.repository = repository;
         this.accountClient = accountClient;
+        this.submissionLocks = submissionLocks;
     }
 
     SubmissionResult submit(TransactionEventRequest request) {
+        return submissionLocks.withEventLock(request.eventId(), () -> submitLocked(request));
+    }
+
+    private SubmissionResult submitLocked(TransactionEventRequest request) {
         var existing = repository.findById(request.eventId());
         if (existing.isPresent()) {
             return new SubmissionResult(existing.get().toResponse(true), true);
