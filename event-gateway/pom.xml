@@ -19,6 +19,12 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.schwab.eventledger</groupId>
+            <artifactId>account-service</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>

@@ -104,7 +104,7 @@ Run unit tests only:
 mvn test
 ```
 
-Run unit plus functional tests and generate both coverage report sets:
+Run the complete automated test suite, including functional tests, real Gateway to Account Service flow, and both coverage report sets:
 
 ```bash
 mvn clean verify
@@ -113,7 +113,7 @@ mvn clean verify
 The build uses Surefire for unit tests and Failsafe for functional tests:
 
 - Unit tests cover account balance math, repository-level duplicate event protection, event submission locking, and circuit breaker behavior.
-- Functional tests cover Gateway and Account Service REST flows, idempotent duplicate submissions, out-of-order event listing, validation failures, trace propagation, concurrent duplicate failure handling, and graceful Gateway behavior when Account Service is unavailable.
+- Functional tests cover Gateway and Account Service REST flows, an end-to-end Gateway to real Account Service transaction flow, idempotent duplicate submissions, out-of-order event listing, validation failures, trace propagation, concurrent duplicate failure handling, and graceful Gateway behavior when Account Service is unavailable.
 
 Coverage reports are generated as HTML:
 
