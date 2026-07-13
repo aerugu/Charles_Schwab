@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerMapping;
 
 import java.io.IOException;
 import java.util.Map;
@@ -35,7 +36,7 @@ class TraceAndMetricsFilter extends OncePerRequestFilter {
         try {
             filterChain.doFilter(request, response);
         } finally {
-            var route = request.getMethod() + " " + request.getRequestURI();
+            var route = request.getMethod() + " " + routePattern(request);
             metrics.record(route, response.getStatus());
             logger.info("request_completed", Map.of(
                     "method", request.getMethod(),
@@ -45,5 +46,10 @@ class TraceAndMetricsFilter extends OncePerRequestFilter {
             ));
             TraceContext.clear();
         }
+    }
+
+    private String routePattern(HttpServletRequest request) {
+        var pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        return pattern instanceof String value ? value : request.getRequestURI();
     }
 }

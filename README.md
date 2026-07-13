@@ -144,7 +144,9 @@ Both services emit JSON log lines with:
 
 The Gateway creates a trace ID for each incoming request when the client does not provide `X-Trace-Id`. The same header is propagated to the Account Service and returned in responses.
 
-Both services expose `GET /metrics`, which returns request and error counts by route.
+Both services expose `GET /health`, which returns service status, active database connectivity, and basic diagnostics such as row counts.
+
+Both services expose `GET /metrics`, which returns request and error counts by endpoint template.
 
 ## API Contract
 

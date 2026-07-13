@@ -63,9 +63,10 @@ class EventController {
 
     @GetMapping("/health")
     HealthResponse health() {
-        return new HealthResponse("event-gateway", "UP", Instant.now(), Map.of(
-                "database", "UP",
-                "eventRows", eventRepository.countRows(),
+        boolean databaseUp = eventRepository.databaseAvailable();
+        return new HealthResponse("event-gateway", databaseUp ? "UP" : "DOWN", Instant.now(), Map.of(
+                "database", databaseUp ? "UP" : "DOWN",
+                "eventRows", databaseUp ? eventRepository.countRows() : "unavailable",
                 "accountServiceCircuitOpen", accountClient.circuitOpen()
         ));
     }

@@ -34,6 +34,9 @@ class JsonLoggerTest {
                 new TypeReference<Map<String, Object>>() {
                 }
         );
+        assertThat(log.get("timestamp")).isInstanceOf(String.class);
+        assertThat((String) log.get("timestamp")).isNotBlank();
+        assertThat(log).containsEntry("level", "INFO");
         assertThat(log).containsEntry("service", "account-service");
         assertThat(log).containsEntry("traceId", "trace-account-log-001");
         assertThat(log).containsEntry("message", "request_completed");

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.schwab.eventledger.common.EventType;
 import com.schwab.eventledger.common.TransactionEventRequest;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -91,6 +92,15 @@ class EventRepository {
     int countRows() {
         Integer count = jdbcTemplate.queryForObject("select count(*) from events", Integer.class);
         return count == null ? 0 : count;
+    }
+
+    boolean databaseAvailable() {
+        try {
+            Integer result = jdbcTemplate.queryForObject("select 1", Integer.class);
+            return result != null && result == 1;
+        } catch (DataAccessException ex) {
+            return false;
+        }
     }
 
     private EventRecord mapRow(ResultSet rs, int rowNum) throws SQLException {

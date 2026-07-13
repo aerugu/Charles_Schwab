@@ -3,6 +3,7 @@ package com.schwab.eventledger.account;
 import com.schwab.eventledger.common.AccountDetailsResponse;
 import com.schwab.eventledger.common.AccountTransactionRequest;
 import com.schwab.eventledger.common.EventType;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -70,6 +71,15 @@ class TransactionRepository {
     int countRows() {
         Integer count = jdbcTemplate.queryForObject("select count(*) from transactions", Integer.class);
         return count == null ? 0 : count;
+    }
+
+    boolean databaseAvailable() {
+        try {
+            Integer result = jdbcTemplate.queryForObject("select 1", Integer.class);
+            return result != null && result == 1;
+        } catch (DataAccessException ex) {
+            return false;
+        }
     }
 
     private AccountDetailsResponse.TransactionSummary summary(ResultSet rs, int rowNum) throws SQLException {

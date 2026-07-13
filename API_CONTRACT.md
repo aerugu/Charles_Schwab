@@ -107,6 +107,23 @@ Returns:
 
 Returns account balance plus recent transactions.
 
+## Observability Endpoints
+
+Both services expose `GET /health`.
+
+Gateway health diagnostics include:
+
+- `database`
+- `eventRows`
+- `accountServiceCircuitOpen`
+
+Account Service health diagnostics include:
+
+- `database`
+- `transactionRows`
+
+Both services expose `GET /metrics`, returning request and error counts keyed by HTTP method plus endpoint template.
+
 ## Cross-Service Headers
 
 The Gateway forwards `X-Trace-Id` to the Account Service. If a client does not provide one, the Gateway creates one for the request.

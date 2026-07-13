@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.schwab.eventledger.common.BalanceResponse;
 import com.schwab.eventledger.common.EventResponse;
 import com.schwab.eventledger.common.EventType;
+import com.schwab.eventledger.common.HealthResponse;
+import com.schwab.eventledger.common.MetricsSnapshot;
 import com.schwab.eventledger.common.TraceHeaders;
 import com.schwab.eventledger.common.TransactionEventRequest;
 import com.sun.net.httpserver.HttpExchange;
@@ -85,6 +87,18 @@ class GatewayIntegrationTest {
     }
 
     @Test
+    void healthReturnsServiceStatusAndDiagnostics() {
+        var health = restTemplate.getForObject("/health", HealthResponse.class);
+
+        assertThat(health.service()).isEqualTo("event-gateway");
+        assertThat(health.status()).isEqualTo("UP");
+        assertThat(health.timestamp()).isNotNull();
+        assertThat(health.diagnostics()).containsEntry("database", "UP");
+        assertThat(health.diagnostics()).containsKey("eventRows");
+        assertThat(health.diagnostics()).containsKey("accountServiceCircuitOpen");
+    }
+
+    @Test
     void acceptsEventsIdempotentlyListsChronologicallyAndPropagatesTraceIds() {
         var later = event("gw-evt-002", "acct-gateway", EventType.DEBIT, "25.00", "2026-05-15T14:02:11Z");
         var earlier = event("gw-evt-001", "acct-gateway", EventType.CREDIT, "150.00", "2026-05-15T13:02:11Z");
@@ -162,6 +176,18 @@ class GatewayIntegrationTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().balance()).isEqualByComparingTo("125.00");
+    }
+
+    @Test
+    void metricsExposeRequestAndErrorCountsByEndpointTemplate() {
+        restTemplate.getForEntity("/accounts/acct-gateway/balance", BalanceResponse.class);
+        restTemplate.postForEntity("/events", Map.of(), String.class);
+
+        var metrics = restTemplate.getForObject("/metrics", MetricsSnapshot.class);
+
+        assertThat(metrics.service()).isEqualTo("event-gateway");
+        assertThat(metrics.requestCounts().get("GET /accounts/{accountId}/balance")).isGreaterThanOrEqualTo(1L);
+        assertThat(metrics.errorCounts().get("POST /events")).isGreaterThanOrEqualTo(1L);
     }
 
     private ResponseEntity<EventResponse> post(TransactionEventRequest request, String traceId) {

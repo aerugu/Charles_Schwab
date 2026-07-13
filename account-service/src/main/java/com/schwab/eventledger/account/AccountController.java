@@ -56,9 +56,10 @@ class AccountController {
 
     @GetMapping("/health")
     HealthResponse health() {
-        return new HealthResponse("account-service", "UP", Instant.now(), Map.of(
-                "database", "UP",
-                "transactionRows", repository.countRows()
+        boolean databaseUp = repository.databaseAvailable();
+        return new HealthResponse("account-service", databaseUp ? "UP" : "DOWN", Instant.now(), Map.of(
+                "database", databaseUp ? "UP" : "DOWN",
+                "transactionRows", databaseUp ? repository.countRows() : "unavailable"
         ));
     }
 
