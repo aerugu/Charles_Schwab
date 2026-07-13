@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.schwab.eventledger.common.EventType;
 import com.schwab.eventledger.common.TransactionEventRequest;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -53,6 +54,21 @@ class EventRepository {
                 request.metadata() == null ? Map.of() : request.metadata(),
                 receivedAt
         );
+    }
+
+    SaveAttempt saveOrFindExisting(TransactionEventRequest request) {
+        try {
+            return new SaveAttempt(save(request), true);
+        } catch (DuplicateKeyException duplicate) {
+            return new SaveAttempt(findById(request.eventId()).orElseThrow(() -> duplicate), false);
+        }
+    }
+
+    void deleteById(String eventId) {
+        jdbcTemplate.update("delete from events where event_id = ?", eventId);
+    }
+
+    record SaveAttempt(EventRecord record, boolean created) {
     }
 
     Optional<EventRecord> findById(String eventId) {

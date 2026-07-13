@@ -70,15 +70,18 @@ class GatewayIntegrationTest {
     void acceptsEventsIdempotentlyListsChronologicallyAndPropagatesTraceIds() {
         var later = event("gw-evt-002", "acct-gateway", EventType.DEBIT, "25.00", "2026-05-15T14:02:11Z");
         var earlier = event("gw-evt-001", "acct-gateway", EventType.CREDIT, "150.00", "2026-05-15T13:02:11Z");
+        var reusedIdDifferentPayload = event("gw-evt-001", "acct-gateway", EventType.DEBIT, "999.00", "2026-05-15T15:02:11Z");
 
         var laterResponse = post(later, "trace-gateway-123");
         var earlierResponse = post(earlier, "trace-gateway-456");
-        var duplicateResponse = post(earlier, "trace-gateway-789");
+        var duplicateResponse = post(reusedIdDifferentPayload, "trace-gateway-789");
 
         assertThat(laterResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(earlierResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(duplicateResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(duplicateResponse.getBody().duplicate()).isTrue();
+        assertThat(duplicateResponse.getBody().type()).isEqualTo(EventType.CREDIT);
+        assertThat(duplicateResponse.getBody().amount()).isEqualByComparingTo("150.00");
         assertThat(TRANSACTION_CALLS.get()).isEqualTo(2);
         assertThat(TRACE_IDS).contains("trace-gateway-123", "trace-gateway-456");
 

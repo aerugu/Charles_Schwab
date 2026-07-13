@@ -23,14 +23,24 @@ class EventService {
             return new SubmissionResult(existing.get().toResponse(true), true);
         }
 
-        accountClient.applyTransaction(request.accountId(), new AccountTransactionRequest(
-                request.eventId(),
-                request.type(),
-                request.amount(),
-                request.currency(),
-                request.eventTimestamp()
-        ));
-        return new SubmissionResult(repository.save(request).toResponse(false), false);
+        var saveAttempt = repository.saveOrFindExisting(request);
+        if (!saveAttempt.created()) {
+            return new SubmissionResult(saveAttempt.record().toResponse(true), true);
+        }
+
+        try {
+            accountClient.applyTransaction(request.accountId(), new AccountTransactionRequest(
+                    request.eventId(),
+                    request.type(),
+                    request.amount(),
+                    request.currency(),
+                    request.eventTimestamp()
+            ));
+            return new SubmissionResult(saveAttempt.record().toResponse(false), false);
+        } catch (AccountUnavailableException ex) {
+            repository.deleteById(request.eventId());
+            throw ex;
+        }
     }
 
     EventResponse event(String eventId) {

@@ -22,7 +22,7 @@ Account Service :8081
   - exposes account details and recent transactions
 ```
 
-The services are independently runnable processes and do not share database state.
+The services are independently runnable processes and do not share database state. In Docker Compose, only the Gateway publishes a host port; the Account Service remains internal to the Compose network.
 
 ## Requirements
 
@@ -45,8 +45,10 @@ curl http://localhost:8080/health
 Account Service:
 
 ```bash
-curl http://localhost:8081/health
+docker compose logs account-service
 ```
+
+In Docker Compose, the Account Service is intentionally not published to the host. It is reachable by the Gateway on the Compose network at `http://account-service:8081`, which keeps the public API boundary aligned with the exercise requirement.
 
 ## Run Locally
 
@@ -113,6 +115,8 @@ Coverage includes:
 ## Resiliency Choice
 
 The Gateway uses timeout + retry with linear backoff and a small circuit breaker around Account Service calls. Timeout and retry prevent slow or transient failures from hanging client requests. The circuit breaker opens after repeated failures so the Gateway can fail fast with `503 Service Unavailable` instead of repeatedly spending resources on an unhealthy dependency.
+
+The Gateway claims `eventId` in its local store before calling the Account Service. That makes the Gateway the source of truth for event identity and prevents concurrent duplicate submissions from racing into inconsistent Gateway and Account records. If the Account Service is unavailable, the Gateway removes that local claim and returns `503`, allowing the client to retry the same event later.
 
 `GET /events/{id}` and `GET /events?account=...` read only from the Gateway database, so they continue working during Account Service outages. Balance and account-detail queries return a clear `503` when the Account Service cannot be reached.
 
