@@ -7,16 +7,24 @@ Event Ledger is a two-service Spring Boot system for accepting financial transac
 ```mermaid
 flowchart LR
     client["Client / Upstream Systems"]
-    gateway["Event Gateway API<br/>Public REST API :8080<br/>Validates, stores events, idempotency, tracing"]
-    gatewayDb[("Gateway H2 DB<br/>events")]
+    limiter["Gateway Rate Limiter<br/>token bucket / 429"]
+    gateway["Event Gateway API<br/>Public REST API :8080<br/>Validation, idempotency, tracing"]
+    gatewayDb[("Gateway H2 DB<br/>events + pending outbox")]
+    retry["Pending Event Retry Worker<br/>scheduled async fallback"]
     account["Account Service<br/>Internal REST API :8081<br/>Balances and transaction history"]
     accountDb[("Account H2 DB<br/>transactions")]
+    metrics["Metrics<br/>/metrics + /metrics/prometheus"]
 
-    client -->|"POST /events<br/>GET /events"| gateway
+    client -->|"POST /events<br/>GET /events"| limiter
+    limiter --> gateway
     gateway -->|"local reads/writes"| gatewayDb
-    gateway -->|"REST + X-Trace-Id<br/>timeout, retry, circuit breaker"| account
+    gateway -->|"REST + X-Trace-Id<br/>timeout, exponential backoff + jitter, circuit breaker"| account
+    gateway -->|"queue when Account Service is down<br/>202 Accepted"| gatewayDb
+    retry -->|"read due pending events"| gatewayDb
+    retry -->|"replay transactions when recovered"| account
     account -->|"local reads/writes"| accountDb
     client -->|"GET /accounts/{id}/balance"| gateway
+    gateway -.-> metrics
 ```
 
 The Event Gateway is the public-facing entry point. It validates incoming transaction events, stores accepted events in its own H2 database, enforces `eventId` idempotency, lists events in `eventTimestamp` order, and propagates `X-Trace-Id` to downstream calls.
