@@ -10,6 +10,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,6 +50,12 @@ class GatewayIntegrationTest {
 
     @Autowired
     private AccountServiceProperties accountServiceProperties;
+
+    @BeforeEach
+    void resetAccountStubState() {
+        TRACE_IDS.clear();
+        TRANSACTION_CALLS.set(0);
+    }
 
     @BeforeAll
     static void startAccountStub() throws IOException {
@@ -99,6 +106,18 @@ class GatewayIntegrationTest {
         var events = restTemplate.getForObject("/events?account=acct-gateway", EventResponse[].class);
 
         assertThat(events).extracting(EventResponse::eventId).containsExactly("gw-evt-001", "gw-evt-002");
+    }
+
+    @Test
+    void generatesTraceIdWhenMissingAndPropagatesItToAccountService() {
+        var request = event("gw-generated-trace-001", "acct-generated-trace", EventType.CREDIT, "15.00", "2026-05-15T14:02:11Z");
+
+        var response = restTemplate.postForEntity("/events", request, EventResponse.class);
+        var generatedTraceId = response.getHeaders().getFirst(TraceHeaders.TRACE_ID);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(generatedTraceId).isNotBlank().matches("[0-9a-f]{32}");
+        assertThat(TRACE_IDS).containsExactly(generatedTraceId);
     }
 
     @Test

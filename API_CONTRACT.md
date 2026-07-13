@@ -110,3 +110,5 @@ Returns account balance plus recent transactions.
 ## Cross-Service Headers
 
 The Gateway forwards `X-Trace-Id` to the Account Service. If a client does not provide one, the Gateway creates one for the request.
+
+Both services include the active trace ID in every structured JSON log line as `traceId`, so one client request can be followed across Gateway logs, Gateway-to-Account call logs, and Account Service logs.
